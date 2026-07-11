@@ -17,7 +17,7 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
         // Return a JSON response with status 500
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .type(MediaType.APPLICATION_JSON)
-                .entity(new ApiResponse<>(false, "Server Error: " + exception.getMessage(), null))
+                .entity(ApiResponse.error("Server Error", "INTERNAL_SERVER_ERROR"))
                 .build();
     }
 }

@@ -7,7 +7,10 @@ import java.util.List;
 
 public interface TweetService {
     TweetResponse postNewTweet(Tweet tweet, String username);
+
     List<TweetResponse> getAllTweets(String userId);
+
     Tweet getTweetById(Long tweetId);
-    List<Tweet> getTweetsByUserId(String userId);
+
+    List<TweetResponse> getTweetsByUserId(String currentUserId, String targetUserId);
 }

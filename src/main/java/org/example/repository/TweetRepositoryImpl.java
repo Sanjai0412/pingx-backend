@@ -53,31 +53,40 @@ public class TweetRepositoryImpl implements TweetRepository {
     public List<TweetResponse> getAllTweets(String userId) {
         List<TweetResponse> tweets = new ArrayList<>();
         String sql = "SELECT " +
-                "t.id, " +
-                "u.username, " +
-                "t.user_id, " +
-                "t.content, " +
-                "COALESCE(l.like_count, 0) AS like_count, " +
-                "COALESCE(r.retweet_count, 0) AS retweet_count, " +
-                "EXISTS ( " +
-                "SELECT 1 " +
-                "FROM likes l2 " +
-                "WHERE l2.tweet_id = t.id " +
-                "AND l2.user_id = ? " +
-                ") AS liked_by_current_user, " +
-                "t.created_at " +
+                "    t.id, " +
+                "    u.username, " +
+                "    u.display_name, " +
+                "    t.user_id, " +
+                "    t.content, " +
+                "    u.profile_img_url, " +
+                "    COALESCE(l.like_count, 0) AS like_count, " +
+                "    COALESCE(r.retweet_count, 0) AS retweet_count, " +
+                "    EXISTS ( " +
+                "        SELECT 1 " +
+                "        FROM likes l2 " +
+                "        WHERE l2.tweet_id = t.id " +
+                "          AND l2.user_id = ? " +
+                "    ) AS liked_by_current_user, " +
+                "    t.created_at " +
                 "FROM tweets t " +
-                "JOIN users u ON t.user_id = u.id " +
+                "JOIN users u " +
+                "    ON t.user_id = u.id " +
                 "LEFT JOIN ( " +
-                "SELECT tweet_id, COUNT(*) AS like_count " +
-                "FROM likes " +
-                "GROUP BY tweet_id " +
-                ") l ON t.id = l.tweet_id " +
+                "    SELECT " +
+                "        tweet_id, " +
+                "        COUNT(*) AS like_count " +
+                "    FROM likes " +
+                "    GROUP BY tweet_id " +
+                ") l " +
+                "    ON t.id = l.tweet_id " +
                 "LEFT JOIN ( " +
-                "SELECT tweet_id, COUNT(*) AS retweet_count " +
-                "FROM retweets " +
-                "GROUP BY tweet_id " +
-                ") r ON t.id = r.tweet_id " +
+                "    SELECT " +
+                "        tweet_id, " +
+                "        COUNT(*) AS retweet_count " +
+                "    FROM retweets " +
+                "    GROUP BY tweet_id " +
+                ") r " +
+                "    ON t.id = r.tweet_id " +
                 "ORDER BY t.created_at DESC";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -88,7 +97,9 @@ public class TweetRepositoryImpl implements TweetRepository {
                     TweetResponse tweet = new TweetResponse();
                     tweet.setId(resultSet.getLong("id"));
                     tweet.setUsername(resultSet.getString("username"));
+                    tweet.setDisplayName(resultSet.getString("display_name"));
                     tweet.setUserId(resultSet.getString("user_id"));
+                    tweet.setProfileImgUrl(resultSet.getString("profile_img_url"));
                     tweet.setContent(resultSet.getString("content"));
                     tweet.setLikeCount(resultSet.getInt("like_count"));
                     tweet.setRetweetCount(resultSet.getInt("retweet_count"));
@@ -130,20 +141,63 @@ public class TweetRepositoryImpl implements TweetRepository {
     }
 
     @Override
-    public List<Tweet> getTweetsByUserId(String userId) {
-        List<Tweet> tweets = new ArrayList<>();
-        String sql = "SELECT * FROM tweets WHERE user_id = ? ORDER BY created_at DESC";
+    public List<TweetResponse> getTweetsByUserId(String currentUserId, String targetUserId) {
+        List<TweetResponse> tweets = new ArrayList<>();
+        String sql = "SELECT " +
+                "    t.id, " +
+                "    u.username, " +
+                "    u.display_name, " +
+                "    t.user_id, " +
+                "    t.content, " +
+                "    u.profile_img_url, " +
+                "    COALESCE(l.like_count, 0) AS like_count, " +
+                "    COALESCE(r.retweet_count, 0) AS retweet_count, " +
+                "    EXISTS ( " +
+                "        SELECT 1 " +
+                "        FROM likes l2 " +
+                "        WHERE l2.tweet_id = t.id " +
+                "          AND l2.user_id = ? " +
+                "    ) AS liked_by_current_user, " +
+                "    t.created_at " +
+                "FROM tweets t " +
+                "JOIN users u " +
+                "    ON t.user_id = u.id " +
+                "LEFT JOIN ( " +
+                "    SELECT " +
+                "        tweet_id, " +
+                "        COUNT(*) AS like_count " +
+                "    FROM likes " +
+                "    GROUP BY tweet_id " +
+                ") l " +
+                "    ON t.id = l.tweet_id " +
+                "LEFT JOIN ( " +
+                "    SELECT " +
+                "        tweet_id, " +
+                "        COUNT(*) AS retweet_count " +
+                "    FROM retweets " +
+                "    GROUP BY tweet_id " +
+                ") r " +
+                "    ON t.id = r.tweet_id " +
+                "WHERE t.user_id = ? " +
+                "ORDER BY t.created_at DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
-            preparedStatement.setString(1, userId);
+            preparedStatement.setString(1, currentUserId);
+            preparedStatement.setString(2, targetUserId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
-                    Tweet tweet = new Tweet();
+                    TweetResponse tweet = new TweetResponse();
                     tweet.setId(resultSet.getLong("id"));
+                    tweet.setUsername(resultSet.getString("username"));
+                    tweet.setDisplayName(resultSet.getString("display_name"));
                     tweet.setUserId(resultSet.getString("user_id"));
+                    tweet.setProfileImgUrl(resultSet.getString("profile_img_url"));
                     tweet.setContent(resultSet.getString("content"));
+                    tweet.setLikeCount(resultSet.getInt("like_count"));
+                    tweet.setRetweetCount(resultSet.getInt("retweet_count"));
+                    tweet.setLikedByCurrentUser(resultSet.getBoolean("liked_by_current_user"));
                     tweet.setCreatedAt(resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));
 
                     tweets.add(tweet);

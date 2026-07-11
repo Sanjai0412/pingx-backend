@@ -83,5 +83,25 @@
       <version>3.1.0</version>
     </dependency>
 
+    <!-- jersey media multipart for file upload -->
+    <dependency>
+        <groupId>org.glassfish.jersey.media</groupId>
+        <artifactId>jersey-media-multipart</artifactId>
+        <version>3.1.5</version>
+    </dependency>
+
+    <!-- Cloudinary for profile pic and tweet image -->
+    <dependency>
+    <groupId>com.cloudinary</groupId>
+    <artifactId>cloudinary-http5</artifactId>
+    <version>2.0.0</version>
+
+</dependency>
+<dependency>
+    <groupId>com.cloudinary</groupId>
+    <artifactId>cloudinary-taglib</artifactId>
+    <version>2.0.0</version>
+</dependency>
+
   </dependencies>
 </project>

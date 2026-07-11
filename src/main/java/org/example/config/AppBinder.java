@@ -16,5 +16,10 @@ public class AppBinder extends AbstractBinder {
 
         bind(LikeRepositoryImpl.class).to(LikeRepository.class).in(Singleton.class);
         bind(LikeServiceImpl.class).to(LikeService.class).in(Singleton.class);
+
+        bind(FollowRepositoryImpl.class).to(FollowRepository.class).in(Singleton.class);
+        bind(FollowServiceImpl.class).to(FollowService.class).in(Singleton.class);
+
+        bind(ImageUploadServiceImpl.class).to(ImageUploadService.class).in(Singleton.class);
     }
 }

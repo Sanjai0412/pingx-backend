@@ -5,17 +5,25 @@ import java.time.ZonedDateTime;
 public class TweetResponse {
     private Long id;
     private String username;
+    private String profileImgUrl;
+    private String displayName;
     private String userId;
     private String content;
     private int likeCount;
     private int retweetCount;
+    // private boolean retweetedByCurrentUser;
     private boolean likedByCurrentUser;
     private ZonedDateTime createdAt;
 
-    public TweetResponse(){}
-    public TweetResponse(Long id, String username, String userId, String content, int likeCount, int retweetCount, boolean likedByCurrentUser, ZonedDateTime createdAt){
+    public TweetResponse() {
+    }
+
+    public TweetResponse(Long id, String username, String displayName, String userId, String content, int likeCount,
+            int retweetCount,
+            boolean likedByCurrentUser, ZonedDateTime createdAt) {
         this.id = id;
         this.username = username;
+        this.displayName = displayName;
         this.userId = userId;
         this.content = content;
         this.likeCount = likeCount;
@@ -40,12 +48,28 @@ public class TweetResponse {
         this.username = username;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
     public String getUserId() {
         return userId;
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public void setProfileImgUrl(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
+    }
+
+    public String getProfileImgUrl() {
+        return this.profileImgUrl;
     }
 
     public String getContent() {
@@ -71,6 +95,14 @@ public class TweetResponse {
     public void setRetweetCount(int retweetCount) {
         this.retweetCount = retweetCount;
     }
+
+    // public boolean getRetweetedByCurrentUser() {
+    // return retweetedByCurrentUser;
+    // }
+
+    // public void setRetweetedByCurrentUser(boolean retweetedByCurrentUser) {
+    // this.retweetedByCurrentUser = retweetedByCurrentUser;
+    // }
 
     public boolean isLikedByCurrentUser() {
         return likedByCurrentUser;
