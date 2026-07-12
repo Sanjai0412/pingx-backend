@@ -67,6 +67,12 @@ public class TweetRepositoryImpl implements TweetRepository {
                 "        WHERE l2.tweet_id = t.id " +
                 "          AND l2.user_id = ? " +
                 "    ) AS liked_by_current_user, " +
+                "    EXISTS ( " +
+                "        SELECT 1 " +
+                "        FROM retweets r2 " +
+                "        WHERE r2.tweet_id = t.id " +
+                "          AND r2.user_id = ? " +
+                "    ) AS retweeted_by_current_user, " +
                 "    t.created_at " +
                 "FROM tweets t " +
                 "JOIN users u " +
@@ -92,6 +98,7 @@ public class TweetRepositoryImpl implements TweetRepository {
                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
             preparedStatement.setString(1, userId);
+            preparedStatement.setString(2, userId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     TweetResponse tweet = new TweetResponse();
@@ -104,6 +111,7 @@ public class TweetRepositoryImpl implements TweetRepository {
                     tweet.setLikeCount(resultSet.getInt("like_count"));
                     tweet.setRetweetCount(resultSet.getInt("retweet_count"));
                     tweet.setLikedByCurrentUser(resultSet.getBoolean("liked_by_current_user"));
+                    tweet.setRetweetedByCurrentUser(resultSet.getBoolean("retweeted_by_current_user"));
                     tweet.setCreatedAt(resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));
 
                     tweets.add(tweet);

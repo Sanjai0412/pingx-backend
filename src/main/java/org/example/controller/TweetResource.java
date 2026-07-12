@@ -12,6 +12,7 @@ import org.example.exception.ConflictException;
 import org.example.model.ApiResponse;
 import org.example.model.Tweet;
 import org.example.service.LikeService;
+import org.example.service.RetweetService;
 import org.example.service.TweetService;
 
 import java.util.List;
@@ -22,11 +23,13 @@ import java.util.List;
 public class TweetResource {
     private final TweetService tweetService;
     private final LikeService likeService;
+    private final RetweetService retweetService;
 
     @Inject
-    public TweetResource(TweetService tweetService, LikeService likeService) {
+    public TweetResource(TweetService tweetService, LikeService likeService, RetweetService retweetService) {
         this.tweetService = tweetService;
         this.likeService = likeService;
+        this.retweetService = retweetService;
     }
 
     @Secured
@@ -126,7 +129,57 @@ public class TweetResource {
                     .build();
         } catch (ConflictException e) {
             return Response.status(Response.Status.CONFLICT)
-                    .entity(ApiResponse.error(e.getMessage(), "ALREADY_LIKED"))
+                    .entity(ApiResponse.error(e.getMessage(), "NOT_LIKED"))
+                    .build();
+        }
+    }
+
+    @Secured
+    @POST
+    @Path("/{tweetId}/retweet")
+    public Response retweet(@PathParam("tweetId") Long tweetId, @Context ContainerRequestContext context) {
+        try {
+            String userId = (String) context.getProperty("userId");
+            boolean isRetweeted = retweetService.retweet(userId, tweetId);
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.success("Tweet retweeted successfully", isRetweeted))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage(), "INVALID_INPUT"))
+                    .build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error(e.getMessage(), "NOT_FOUND"))
+                    .build();
+        } catch (ConflictException e) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(ApiResponse.error(e.getMessage(), "ALREADY_RETWEETED"))
+                    .build();
+        }
+    }
+
+    @Secured
+    @DELETE
+    @Path("/{tweetId}/retweet")
+    public Response unRetweet(@PathParam("tweetId") Long tweetId, @Context ContainerRequestContext context) {
+        try {
+            String userId = (String) context.getProperty("userId");
+            boolean isRetweeted = retweetService.undoRetweet(userId, tweetId);
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.success("Tweet un-retweeted successfully", isRetweeted))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage(), "INVALID_INPUT"))
+                    .build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error(e.getMessage(), "NOT_FOUND"))
+                    .build();
+        } catch (ConflictException e) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(ApiResponse.error(e.getMessage(), "NOT_RETWEETED"))
                     .build();
         }
     }

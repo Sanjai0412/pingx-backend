@@ -11,7 +11,7 @@ public class TweetResponse {
     private String content;
     private int likeCount;
     private int retweetCount;
-    // private boolean retweetedByCurrentUser;
+    private boolean retweetedByCurrentUser;
     private boolean likedByCurrentUser;
     private ZonedDateTime createdAt;
 
@@ -19,8 +19,7 @@ public class TweetResponse {
     }
 
     public TweetResponse(Long id, String username, String displayName, String userId, String content, int likeCount,
-            int retweetCount,
-            boolean likedByCurrentUser, ZonedDateTime createdAt) {
+            int retweetCount, boolean retweetedByCurrentUser, boolean likedByCurrentUser, ZonedDateTime createdAt) {
         this.id = id;
         this.username = username;
         this.displayName = displayName;
@@ -29,6 +28,7 @@ public class TweetResponse {
         this.likeCount = likeCount;
         this.retweetCount = retweetCount;
         this.likedByCurrentUser = likedByCurrentUser;
+        this.retweetedByCurrentUser = retweetedByCurrentUser;
         this.createdAt = createdAt;
     }
 
@@ -96,13 +96,13 @@ public class TweetResponse {
         this.retweetCount = retweetCount;
     }
 
-    // public boolean getRetweetedByCurrentUser() {
-    // return retweetedByCurrentUser;
-    // }
+    public boolean getRetweetedByCurrentUser() {
+        return retweetedByCurrentUser;
+    }
 
-    // public void setRetweetedByCurrentUser(boolean retweetedByCurrentUser) {
-    // this.retweetedByCurrentUser = retweetedByCurrentUser;
-    // }
+    public void setRetweetedByCurrentUser(boolean retweetedByCurrentUser) {
+        this.retweetedByCurrentUser = retweetedByCurrentUser;
+    }
 
     public boolean isLikedByCurrentUser() {
         return likedByCurrentUser;
