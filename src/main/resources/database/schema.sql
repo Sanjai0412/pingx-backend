@@ -11,10 +11,12 @@ CREATE TABLE tweets(
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
     content VARCHAR(280) NOT NULL,
+    quote_tweet_id BIGINT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
     -- Relationship : link tweets to author
-CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+CONSTRAINT fk_quote FOREIGN KEY (quote_tweet_id) REFERENCES tweets(id) ON DELETE SET NULL
 )
 
 CREATE TABLE followers(

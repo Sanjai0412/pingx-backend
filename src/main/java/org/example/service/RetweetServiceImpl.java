@@ -24,7 +24,7 @@ public class RetweetServiceImpl implements RetweetService {
         if (userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID is required");
         }
-        if (tweetRepository.getTweetById(tweetId) == null) {
+        if (tweetRepository.getTweetById(tweetId, userId) == null) {
             throw new NotFoundException("Tweet not found");
         }
         if (retweetRepository.hasUserRetweetedTweet(userId, tweetId)) {
@@ -41,7 +41,7 @@ public class RetweetServiceImpl implements RetweetService {
         if (userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID is required");
         }
-        if (tweetRepository.getTweetById(tweetId) == null) {
+        if (tweetRepository.getTweetById(tweetId, userId) == null) {
             throw new NotFoundException("Tweet not found");
         }
         if (!retweetRepository.hasUserRetweetedTweet(userId, tweetId)) {
@@ -58,18 +58,18 @@ public class RetweetServiceImpl implements RetweetService {
         if (userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID is required");
         }
-        if (tweetRepository.getTweetById(tweetId) == null) {
+        if (tweetRepository.getTweetById(tweetId, userId) == null) {
             throw new NotFoundException("Tweet not found");
         }
         return retweetRepository.hasUserRetweetedTweet(userId, tweetId);
     }
 
     @Override
-    public long getRetweetCount(Long tweetId) {
+    public long getRetweetCount(Long tweetId, String userId) {
         if (tweetId == null) {
             throw new IllegalArgumentException("Tweet ID cannot be null");
         }
-        if (tweetRepository.getTweetById(tweetId) == null) {
+        if (tweetRepository.getTweetById(tweetId, userId) == null) {
             throw new NotFoundException("Tweet not found");
         }
         return retweetRepository.getRetweetsCount(tweetId);

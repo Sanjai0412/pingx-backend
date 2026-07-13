@@ -7,5 +7,5 @@ public interface RetweetService {
 
     boolean hasUserRetweetedTweet(String userId, Long tweetId);
 
-    long getRetweetCount(Long tweetId);
+    long getRetweetCount(Long tweetId, String userId);
 }

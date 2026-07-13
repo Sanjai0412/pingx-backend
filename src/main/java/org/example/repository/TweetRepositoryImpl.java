@@ -3,6 +3,7 @@ package org.example.repository;
 import java.util.List;
 import org.example.config.DatabaseConnection;
 import org.example.dto.TweetResponse;
+import org.example.mapper.TweetMapper;
 import org.example.model.Tweet;
 
 import java.sql.Connection;
@@ -13,8 +14,10 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 
 public class TweetRepositoryImpl implements TweetRepository {
+    private final TweetMapper tweetMapper = new TweetMapper(); // Tweet mapper
+
     @Override
-    public TweetResponse createTweet(Tweet tweet, String username) {
+    public TweetResponse createTweet(Tweet tweet) {
         String sql = "INSERT INTO tweets (user_id, content) VALUES (?, ?)";
         String[] columnsToReturn = { "id", "user_id", "content", "created_at" }; // to return these fields
         try (Connection conn = DatabaseConnection.getConnection();
@@ -27,19 +30,9 @@ public class TweetRepositoryImpl implements TweetRepository {
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-
-                        TweetResponse tweetResponse = new TweetResponse();
-                        tweetResponse.setId(generatedKeys.getLong(1));
-                        tweetResponse.setUserId(generatedKeys.getString(2));
-                        tweetResponse.setContent(generatedKeys.getString(3));
-                        tweetResponse.setCreatedAt(generatedKeys.getTimestamp(4).toInstant().atZone(ZoneId.of("UTC")));
-                        // set 0 as default
-                        tweetResponse.setUsername(username); // from req body
-                        tweetResponse.setLikeCount(0);
-                        tweetResponse.setRetweetCount(0);
-                        tweetResponse.setLikedByCurrentUser(false);
-
-                        return tweetResponse;
+                        Long tweetId = generatedKeys.getLong(1);
+                        String userId = generatedKeys.getString(2);
+                        return getTweetById(tweetId, userId);
                     }
                 }
             }
@@ -50,86 +43,10 @@ public class TweetRepositoryImpl implements TweetRepository {
     }
 
     @Override
-    public List<TweetResponse> getAllTweets(String userId) {
-        List<TweetResponse> tweets = new ArrayList<>();
-        String sql = "SELECT " +
-                "    t.id, " +
-                "    u.username, " +
-                "    u.display_name, " +
-                "    t.user_id, " +
-                "    t.content, " +
-                "    u.profile_img_url, " +
-                "    COALESCE(l.like_count, 0) AS like_count, " +
-                "    COALESCE(r.retweet_count, 0) AS retweet_count, " +
-                "    EXISTS ( " +
-                "        SELECT 1 " +
-                "        FROM likes l2 " +
-                "        WHERE l2.tweet_id = t.id " +
-                "          AND l2.user_id = ? " +
-                "    ) AS liked_by_current_user, " +
-                "    EXISTS ( " +
-                "        SELECT 1 " +
-                "        FROM retweets r2 " +
-                "        WHERE r2.tweet_id = t.id " +
-                "          AND r2.user_id = ? " +
-                "    ) AS retweeted_by_current_user, " +
-                "    t.created_at " +
-                "FROM tweets t " +
-                "JOIN users u " +
-                "    ON t.user_id = u.id " +
-                "LEFT JOIN ( " +
-                "    SELECT " +
-                "        tweet_id, " +
-                "        COUNT(*) AS like_count " +
-                "    FROM likes " +
-                "    GROUP BY tweet_id " +
-                ") l " +
-                "    ON t.id = l.tweet_id " +
-                "LEFT JOIN ( " +
-                "    SELECT " +
-                "        tweet_id, " +
-                "        COUNT(*) AS retweet_count " +
-                "    FROM retweets " +
-                "    GROUP BY tweet_id " +
-                ") r " +
-                "    ON t.id = r.tweet_id " +
-                "ORDER BY t.created_at DESC";
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-
-            preparedStatement.setString(1, userId);
-            preparedStatement.setString(2, userId);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    TweetResponse tweet = new TweetResponse();
-                    tweet.setId(resultSet.getLong("id"));
-                    tweet.setUsername(resultSet.getString("username"));
-                    tweet.setDisplayName(resultSet.getString("display_name"));
-                    tweet.setUserId(resultSet.getString("user_id"));
-                    tweet.setProfileImgUrl(resultSet.getString("profile_img_url"));
-                    tweet.setContent(resultSet.getString("content"));
-                    tweet.setLikeCount(resultSet.getInt("like_count"));
-                    tweet.setRetweetCount(resultSet.getInt("retweet_count"));
-                    tweet.setLikedByCurrentUser(resultSet.getBoolean("liked_by_current_user"));
-                    tweet.setRetweetedByCurrentUser(resultSet.getBoolean("retweeted_by_current_user"));
-                    tweet.setCreatedAt(resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));
-
-                    tweets.add(tweet);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-        return tweets;
-    }
-
-    @Override
-    public Tweet getTweetById(Long tweetId) {
+    public Tweet fetchTweetById(Long tweetId) {
         String sql = "SELECT * FROM tweets WHERE id = ?";
-
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-
             preparedStatement.setLong(1, tweetId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -137,6 +54,7 @@ public class TweetRepositoryImpl implements TweetRepository {
                     tweet.setId(resultSet.getLong("id"));
                     tweet.setUserId(resultSet.getString("user_id"));
                     tweet.setContent(resultSet.getString("content"));
+                    tweet.setQuoteTweetId(resultSet.getLong("quote_tweet_id"));
                     tweet.setCreatedAt(resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));
 
                     return tweet;
@@ -149,23 +67,84 @@ public class TweetRepositoryImpl implements TweetRepository {
     }
 
     @Override
-    public List<TweetResponse> getTweetsByUserId(String currentUserId, String targetUserId) {
-        List<TweetResponse> tweets = new ArrayList<>();
+    public TweetResponse createQuoteTweet(Tweet tweet) {
+        String sql = "INSERT INTO tweets (user_id, content, quote_tweet_id) VALUES (?, ?, ?)";
+        String[] columnsToReturn = { "id", "user_id", "content", "created_at" }; // to return these fields
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql, columnsToReturn)) {
+
+            preparedStatement.setString(1, tweet.getUserId());
+            preparedStatement.setString(2, tweet.getContent());
+            preparedStatement.setLong(3, tweet.getQuoteTweetId());
+
+            int affectedRows = preparedStatement.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        Long tweetId = generatedKeys.getLong(1);
+                        String userId = generatedKeys.getString(2);
+                        return getTweetById(tweetId, userId);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public List<Long> getAllTweetIds() {
+        List<Long> tweetIds = new ArrayList<>();
+        String sql = "SELECT " +
+                "    t.id " +
+                "FROM tweets t " +
+                "ORDER BY t.created_at DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    tweetIds.add(resultSet.getLong("id"));
+                }
+                return tweetIds;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @Override
+    public TweetResponse getTweetById(Long tweetId, String userId) {
         String sql = "SELECT " +
                 "    t.id, " +
                 "    u.username, " +
                 "    u.display_name, " +
+                "    t.quote_tweet_id, " +
                 "    t.user_id, " +
                 "    t.content, " +
                 "    u.profile_img_url, " +
                 "    COALESCE(l.like_count, 0) AS like_count, " +
-                "    COALESCE(r.retweet_count, 0) AS retweet_count, " +
+                "    (COALESCE(r.retweet_count, 0) + COALESCE(q.quote_count, 0)) AS retweet_count, " +
                 "    EXISTS ( " +
                 "        SELECT 1 " +
                 "        FROM likes l2 " +
                 "        WHERE l2.tweet_id = t.id " +
                 "          AND l2.user_id = ? " +
                 "    ) AS liked_by_current_user, " +
+                "    EXISTS ( " +
+                "        SELECT 1 " +
+                "        FROM retweets r2 " +
+                "        WHERE r2.tweet_id = t.id " +
+                "          AND r2.user_id = ? " +
+                "    ) " +
+                "        OR EXISTS ( " +
+                "            SELECT 1 " +
+                "            FROM tweets qt " +
+                "            WHERE qt.quote_tweet_id = t.id " +
+                "              AND qt.user_id = ? " +
+                "        ) " +
+                "AS retweeted_by_current_user, " +
                 "    t.created_at " +
                 "FROM tweets t " +
                 "JOIN users u " +
@@ -185,35 +164,58 @@ public class TweetRepositoryImpl implements TweetRepository {
                 "    FROM retweets " +
                 "    GROUP BY tweet_id " +
                 ") r " +
-                "    ON t.id = r.tweet_id " +
+                "ON t.id = r.tweet_id " +
+                "LEFT JOIN ( " +
+                "    SELECT " +
+                "        quote_tweet_id, " +
+                "        COUNT(*) AS quote_count " +
+                "    FROM tweets " +
+                "    WHERE quote_tweet_id IS NOT NULL " +
+                "    GROUP BY quote_tweet_id " +
+                ") q " +
+                "    ON t.id = q.quote_tweet_id " +
+                "WHERE t.id = ? " +
+                "ORDER BY t.created_at DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, userId);
+            preparedStatement.setString(2, userId);
+            preparedStatement.setString(3, userId);
+            preparedStatement.setLong(4, tweetId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return tweetMapper.map(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public List<Long> getTweetIdsByUserId(String targetUserId) {
+        List<Long> tweetIds = new ArrayList<>();
+        String sql = "SELECT " +
+                "    t.id " +
+                "    FROM tweets t " +
                 "WHERE t.user_id = ? " +
                 "ORDER BY t.created_at DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
-            preparedStatement.setString(1, currentUserId);
-            preparedStatement.setString(2, targetUserId);
+            preparedStatement.setString(1, targetUserId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
-                    TweetResponse tweet = new TweetResponse();
-                    tweet.setId(resultSet.getLong("id"));
-                    tweet.setUsername(resultSet.getString("username"));
-                    tweet.setDisplayName(resultSet.getString("display_name"));
-                    tweet.setUserId(resultSet.getString("user_id"));
-                    tweet.setProfileImgUrl(resultSet.getString("profile_img_url"));
-                    tweet.setContent(resultSet.getString("content"));
-                    tweet.setLikeCount(resultSet.getInt("like_count"));
-                    tweet.setRetweetCount(resultSet.getInt("retweet_count"));
-                    tweet.setLikedByCurrentUser(resultSet.getBoolean("liked_by_current_user"));
-                    tweet.setCreatedAt(resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));
-
-                    tweets.add(tweet);
+                    tweetIds.add(resultSet.getLong("id"));
                 }
+                return tweetIds;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage());
         }
-        return tweets;
     }
 }

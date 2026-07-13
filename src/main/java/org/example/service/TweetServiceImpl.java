@@ -1,14 +1,17 @@
 package org.example.service;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.inject.Inject;
 import org.example.dto.TweetResponse;
 import org.example.model.Tweet;
 import org.example.repository.TweetRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TweetServiceImpl implements TweetService {
     private final TweetRepository tweetRepository;
+    private static final int MAX_QUOTE_DEPTH = Integer.parseInt(Dotenv.load().get("MAX_QUOTE_DEPTH"));
 
     // HK2 reads this annotation and passes in the TweetRepositoryImpl obj
     @Inject
@@ -16,8 +19,26 @@ public class TweetServiceImpl implements TweetService {
         this.tweetRepository = tweetRepository;
     }
 
+    // To build tweet modal with its reposts with limit
     @Override
-    public TweetResponse postNewTweet(Tweet tweet, String username) {
+    public TweetResponse buildTweetResponse(Long tweetId, String currentUserId, int depth) {
+        TweetResponse tweet = tweetRepository.getTweetById(tweetId, currentUserId);
+        if (tweet == null) {
+            return null;
+        }
+
+        if (depth > 0 && tweet.getQuoteTweetId() != null) {
+            tweet.setQuotedTweet(
+                    buildTweetResponse(
+                            tweet.getQuoteTweetId(),
+                            currentUserId,
+                            depth - 1));
+        }
+        return tweet;
+    }
+
+    @Override
+    public TweetResponse postNewTweet(Tweet tweet) {
         if (tweet.getContent() == null || tweet.getContent().trim().isEmpty()) {
             throw new IllegalArgumentException("Tweet content cannot be empty");
         }
@@ -27,20 +48,38 @@ public class TweetServiceImpl implements TweetService {
         if (tweet.getUserId() == null || tweet.getUserId().trim().isEmpty()) {
             throw new IllegalArgumentException("User ID is required to tweet");
         }
-        return tweetRepository.createTweet(tweet, username);
+
+        TweetResponse created;
+
+        if (tweet.getQuoteTweetId() != null) {
+            created = tweetRepository.createQuoteTweet(tweet);
+        } else {
+            created = tweetRepository.createTweet(tweet);
+        }
+        return buildTweetResponse(
+                created.getId(),
+                tweet.getUserId(),
+                MAX_QUOTE_DEPTH);
     }
 
     @Override
     public List<TweetResponse> getAllTweets(String userId) {
-        return tweetRepository.getAllTweets(userId);
+        List<TweetResponse> tweets = new ArrayList<>();
+        List<Long> tweetIds = tweetRepository.getAllTweetIds();
+
+        for (Long id : tweetIds) {
+            tweets.add(
+                    buildTweetResponse(id, userId, MAX_QUOTE_DEPTH));
+        }
+        return tweets;
     }
 
     @Override
-    public Tweet getTweetById(Long tweetId) {
+    public TweetResponse getTweetById(Long tweetId, String userId) {
         if (tweetId == null) {
             throw new IllegalArgumentException("Tweet ID cannot be empty");
         }
-        return tweetRepository.getTweetById(tweetId);
+        return buildTweetResponse(tweetId, userId, MAX_QUOTE_DEPTH);
     }
 
     @Override
@@ -48,6 +87,25 @@ public class TweetServiceImpl implements TweetService {
         if (currentUserId == null || currentUserId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID cannot be empty");
         }
-        return tweetRepository.getTweetsByUserId(currentUserId, targetUserId);
+        List<Long> tweetIds = tweetRepository.getTweetIdsByUserId(targetUserId);
+        List<TweetResponse> tweets = new ArrayList<>();
+        for (Long id : tweetIds) {
+            tweets.add(
+                    buildTweetResponse(id, currentUserId, MAX_QUOTE_DEPTH));
+        }
+        return tweets;
+    }
+
+    @Override
+    public TweetResponse getRootTweet(Long tweetId, String currentUserId) {
+        Tweet tweet = tweetRepository.fetchTweetById(tweetId);
+
+        if (tweet == null)
+            return null;
+
+        while (tweet.getQuoteTweetId() != null) {
+            tweet = tweetRepository.fetchTweetById(tweet.getQuoteTweetId());
+        }
+        return tweetRepository.getTweetById(tweet.getId(), currentUserId);
     }
 }

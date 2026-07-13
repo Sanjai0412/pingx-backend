@@ -6,11 +6,15 @@ import org.example.dto.TweetResponse;
 import org.example.model.Tweet;
 
 public interface TweetRepository {
-    TweetResponse createTweet(Tweet tweet, String username);
+    TweetResponse createTweet(Tweet tweet);
 
-    List<TweetResponse> getAllTweets(String userId);
+    Tweet fetchTweetById(Long tweetId);
 
-    Tweet getTweetById(Long tweetId);
+    TweetResponse createQuoteTweet(Tweet tweet);
 
-    List<TweetResponse> getTweetsByUserId(String userId, String targetUserId);
+    List<Long> getAllTweetIds();
+
+    TweetResponse getTweetById(Long tweetId, String userId);
+
+    List<Long> getTweetIdsByUserId(String targetUserId);
 }
