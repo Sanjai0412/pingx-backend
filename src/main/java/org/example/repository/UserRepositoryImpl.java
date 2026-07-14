@@ -2,6 +2,7 @@ package org.example.repository;
 
 import org.example.config.DatabaseConnection;
 import org.example.dto.UserProfileResponse;
+import org.example.dto.UserResponse;
 import org.example.model.User;
 import java.util.List;
 import java.sql.*;
@@ -66,7 +67,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User getUserById(String userId) {
+    public UserResponse getUserById(String userId) {
         String sql = "SELECT * FROM users WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -74,13 +75,11 @@ public class UserRepositoryImpl implements UserRepository {
             preparedStatement.setString(1, userId);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                return new User(
+                return new UserResponse(
                         resultSet.getString("id"),
                         resultSet.getString("username"),
                         resultSet.getString("display_name"),
-                        resultSet.getString("bio"),
-                        resultSet.getString("profile_img_url"),
-                        resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));
+                        resultSet.getString("profile_img_url"));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage());

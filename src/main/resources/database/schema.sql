@@ -56,3 +56,36 @@ CREATE TABLE retweets(
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_tweet FOREIGN KEY (tweet_id) REFERENCES tweets(id) ON DELETE CASCADE
 )
+
+CREATE TABLE comments (
+    id BIGSERIAL PRIMARY KEY,
+    tweet_id BIGINT NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    content VARCHAR(280) NOT NULL,
+    parent_comment_id BIGINT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_comment_tweet
+        FOREIGN KEY (tweet_id)
+        REFERENCES tweets(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_comment_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE comment_likes(
+    user_id VARCHAR(255) NOT NULL,
+    comment_id BIGINT NOT NULL,
+    liked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    -- to prevent multiple like on same comment from a single user
+    PRIMARY KEY(user_id, comment_id),
+
+    -- Relationship: link like to comments and user
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comment FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE
+);

@@ -68,6 +68,7 @@ public class TweetResource {
         }
     }
 
+    @Secured
     @GET
     @Path("/{tweetId}")
     public Response getTweetById(@PathParam("tweetId") Long tweetId, @Context ContainerRequestContext context) {

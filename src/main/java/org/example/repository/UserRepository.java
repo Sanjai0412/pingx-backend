@@ -1,13 +1,14 @@
 package org.example.repository;
 
 import org.example.dto.UserProfileResponse;
+import org.example.dto.UserResponse;
 import org.example.model.User;
 import java.util.List;
 
 public interface UserRepository {
     public void createUser(User user);
 
-    public User getUserById(String userId);
+    public UserResponse getUserById(String userId);
 
     public UserProfileResponse getUserByUsername(String username);
 

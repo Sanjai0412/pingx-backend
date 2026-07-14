@@ -19,7 +19,7 @@ public class TweetRepositoryImpl implements TweetRepository {
     @Override
     public TweetResponse createTweet(Tweet tweet) {
         String sql = "INSERT INTO tweets (user_id, content) VALUES (?, ?)";
-        String[] columnsToReturn = { "id", "user_id", "content", "created_at" }; // to return these fields
+        String[] columnsToReturn = { "id", "user_id" }; // to return these fields
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement preparedStatement = conn.prepareStatement(sql, columnsToReturn)) {
 
@@ -212,10 +212,10 @@ public class TweetRepositoryImpl implements TweetRepository {
                 while (resultSet.next()) {
                     tweetIds.add(resultSet.getLong("id"));
                 }
-                return tweetIds;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage());
         }
+        return tweetIds;
     }
 }

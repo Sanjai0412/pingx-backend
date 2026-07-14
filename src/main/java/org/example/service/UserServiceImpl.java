@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import java.util.List;
 
 import org.example.dto.UserProfileResponse;
+import org.example.dto.UserResponse;
 import org.example.model.User;
 import org.example.repository.UserRepository;
 
@@ -30,7 +31,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserProfileById(String userId) {
+    public UserResponse getUserById(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID is required");
         }
