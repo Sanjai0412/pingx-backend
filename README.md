@@ -229,6 +229,7 @@ http://localhost:8080/api
 
 - JWT Authentication
 - User Profiles
+- Profile viewing
 - Follow / Unfollow
 - Tweet Creation
 - Tweet Deletion
@@ -250,6 +251,5 @@ http://localhost:8080/api
 - Notifications
 - Infinite Scrolling (Cursor Pagination)
 - Bookmarks
-- User Profile Tabs
 - Trending Feed
 - Direct Messaging
