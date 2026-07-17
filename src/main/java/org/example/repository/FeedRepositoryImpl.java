@@ -16,7 +16,6 @@ public class FeedRepositoryImpl implements FeedRepository {
 
     @Override
     public List<FeedActivity> getHomeFeedActivities(String currentUserId, int limit, int offset) {
-        System.out.println("feed repo");
 
         List<FeedActivity> feedActivities = new ArrayList<>();
         String sql = """

@@ -3,21 +3,25 @@ package org.example.service;
 import jakarta.inject.Inject;
 import org.example.exception.ConflictException;
 import org.example.exception.NotFoundException;
+import org.example.model.NotificationType;
 import org.example.repository.FollowRepository;
 import org.example.repository.UserRepository;
 
 public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Inject
-    public FollowServiceImpl(FollowRepository followRepository, UserRepository userRepository) {
+    public FollowServiceImpl(FollowRepository followRepository, UserRepository userRepository,
+            NotificationService notificationService) {
         this.followRepository = followRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
-    public boolean followUser(String followerId, String followingId) {
+    public void followUser(String followerId, String followingId) {
         validateUserIds(followerId, followingId);
 
         if (followerId.equals(followingId)) {
@@ -37,11 +41,20 @@ public class FollowServiceImpl implements FollowService {
             throw new ConflictException("Already following this user");
         }
 
-        return followRepository.followUser(followerId, followingId);
+        followRepository.followUser(followerId, followingId);
+
+        if (!followingId.equals(followerId)) {
+            notificationService.notify(
+                    followingId,
+                    followerId,
+                    NotificationType.FOLLOW,
+                    null,
+                    null);
+        }
     }
 
     @Override
-    public boolean unfollowUser(String followerId, String followingId) {
+    public void unfollowUser(String followerId, String followingId) {
         validateUserIds(followerId, followingId);
 
         // Check if users exist
@@ -57,7 +70,14 @@ public class FollowServiceImpl implements FollowService {
             throw new ConflictException("Not following this user");
         }
 
-        return followRepository.unfollowUser(followerId, followingId);
+        followRepository.unfollowUser(followerId, followingId);
+
+        notificationService.deleteNotification(
+                followingId,
+                followerId,
+                NotificationType.FOLLOW,
+                null,
+                null);
     }
 
     @Override

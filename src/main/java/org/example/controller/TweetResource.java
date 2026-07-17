@@ -95,9 +95,9 @@ public class TweetResource {
     public Response likeTweet(@PathParam("tweetId") Long tweetId, @Context ContainerRequestContext context) {
         try {
             String userId = (String) context.getProperty("userId");
-            boolean isLiked = likeService.likeTweet(userId, tweetId);
+            likeService.likeTweet(userId, tweetId);
             return Response.status(Response.Status.OK)
-                    .entity(ApiResponse.success("Tweet liked successfully", isLiked))
+                    .entity(ApiResponse.success("Tweet liked successfully", null))
                     .build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -120,9 +120,9 @@ public class TweetResource {
     public Response unLikeTweet(@PathParam("tweetId") Long tweetId, @Context ContainerRequestContext context) {
         try {
             String userId = (String) context.getProperty("userId");
-            boolean isLiked = likeService.unlikeTweet(userId, tweetId);
+            likeService.unlikeTweet(userId, tweetId);
             return Response.status(Response.Status.OK)
-                    .entity(ApiResponse.success("Tweet un-liked successfully", isLiked))
+                    .entity(ApiResponse.success("Tweet un-liked successfully", null))
                     .build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)

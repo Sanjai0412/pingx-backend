@@ -89,3 +89,24 @@ CREATE TABLE comment_likes(
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_comment FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE
 );
+
+CREATE TABLE notifications (
+    id BIGSERIAL PRIMARY KEY,
+
+    recipient_id VARCHAR(255) NOT NULL,
+    actor_id VARCHAR(255) NOT NULL,
+
+    type VARCHAR(20) NOT NULL,
+
+    tweet_id BIGINT,
+    comment_id BIGINT,
+
+    is_read BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_recipient FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_tweet FOREIGN KEY (tweet_id) REFERENCES tweets(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_comment FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE
+);

@@ -3,21 +3,25 @@ package org.example.service;
 import jakarta.inject.Inject;
 import org.example.exception.ConflictException;
 import org.example.exception.NotFoundException;
+import org.example.model.NotificationType;
 import org.example.repository.LikeRepository;
 import org.example.repository.TweetRepository;
 
 public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final TweetRepository tweetRepository;
+    private final NotificationService notificationService;
 
     @Inject
-    public LikeServiceImpl(LikeRepository likeRepository, TweetRepository tweetRepository) {
+    public LikeServiceImpl(LikeRepository likeRepository, TweetRepository tweetRepository,
+            NotificationService notificationService) {
         this.likeRepository = likeRepository;
         this.tweetRepository = tweetRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
-    public boolean likeTweet(String userId, Long tweetId) {
+    public void likeTweet(String userId, Long tweetId) {
         if (tweetId == null) {
             throw new IllegalArgumentException("Tweet ID cannot be null");
         }
@@ -30,11 +34,21 @@ public class LikeServiceImpl implements LikeService {
         if (likeRepository.isLiked(userId, tweetId)) {
             throw new ConflictException("Tweet already liked");
         }
-        return likeRepository.likeTweet(userId, tweetId);
+        likeRepository.likeTweet(userId, tweetId);
+
+        String tweetOwnerId = tweetRepository.fetchTweetById(tweetId).getUserId();
+        if (!tweetOwnerId.equals(userId)) {
+            notificationService.notify(
+                    tweetOwnerId,
+                    userId,
+                    NotificationType.LIKE,
+                    tweetId,
+                    null);
+        }
     }
 
     @Override
-    public boolean unlikeTweet(String userId, Long tweetId) {
+    public void unlikeTweet(String userId, Long tweetId) {
         if (tweetId == null) {
             throw new IllegalArgumentException("Tweet ID cannot be null");
         }
@@ -47,7 +61,17 @@ public class LikeServiceImpl implements LikeService {
         if (!likeRepository.isLiked(userId, tweetId)) {
             throw new ConflictException("Tweet never liked");
         }
-        return likeRepository.unlikeTweet(userId, tweetId);
+        likeRepository.unlikeTweet(userId, tweetId);
+
+        String tweetOwnerId = tweetRepository.fetchTweetById(tweetId).getUserId();
+        if (!tweetOwnerId.equals(userId)) {
+            notificationService.deleteNotification(
+                    tweetOwnerId,
+                    userId,
+                    NotificationType.LIKE,
+                    tweetId,
+                    null);
+        }
     }
 
     @Override

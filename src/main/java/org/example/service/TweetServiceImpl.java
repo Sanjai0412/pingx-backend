@@ -4,19 +4,26 @@ import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.inject.Inject;
 import org.example.dto.TweetResponse;
 import org.example.model.Tweet;
+import org.example.model.NotificationType;
 import org.example.repository.TweetRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TweetServiceImpl implements TweetService {
     private final TweetRepository tweetRepository;
+    private final NotificationService notificationService;
     private static final int MAX_QUOTE_DEPTH = Integer.parseInt(Dotenv.load().get("MAX_QUOTE_DEPTH"));
 
     // HK2 reads this annotation and passes in the TweetRepositoryImpl obj
     @Inject
-    public TweetServiceImpl(TweetRepository tweetRepository) {
+    public TweetServiceImpl(TweetRepository tweetRepository, NotificationService notificationService) {
         this.tweetRepository = tweetRepository;
+        this.notificationService = notificationService;
     }
 
     // To build tweet modal with its reposts with limit
@@ -27,14 +34,61 @@ public class TweetServiceImpl implements TweetService {
             return null;
         }
 
-        if (depth > 0 && tweet.getQuoteTweetId() != null) {
-            tweet.setQuotedTweet(
-                    buildTweetResponse(
-                            tweet.getQuoteTweetId(),
-                            currentUserId,
-                            depth - 1));
+        List<TweetResponse> tweets = buildTweetResponses(
+                List.of(tweetId), currentUserId, depth);
+
+        return tweets.isEmpty() ? null : tweets.get(0);
+    }
+
+    // To build tweets modal with its reposts with limit (no n + 1 query problem)
+    @Override
+    public List<TweetResponse> buildTweetResponses(List<Long> tweetIds, String currentUserId, int depth) {
+        if (tweetIds == null || tweetIds.isEmpty()) {
+            return new ArrayList<TweetResponse>();
         }
-        return tweet;
+
+        List<TweetResponse> tweets = tweetRepository.getTweetsById(tweetIds, currentUserId);
+
+        Map<Long, TweetResponse> tweetMap = new HashMap<>(tweets.size());
+        for (TweetResponse tweet : tweets) {
+            tweetMap.put(tweet.getId(), tweet);
+        }
+
+        if (depth > 0) {
+            Set<Long> quoteIds = new HashSet<>();
+            for (TweetResponse tweet : tweets) {
+                if (tweet.getQuoteTweetId() != null) {
+                    quoteIds.add(tweet.getQuoteTweetId());
+                }
+            }
+            if (!quoteIds.isEmpty()) {
+                List<TweetResponse> quoteTweets = buildTweetResponses(new ArrayList<>(quoteIds), currentUserId,
+                        depth - 1);
+
+                Map<Long, TweetResponse> quotedMap = new HashMap<>(quoteTweets.size());
+
+                for (TweetResponse quoteTweet : quoteTweets) {
+                    quotedMap.put(quoteTweet.getId(), quoteTweet);
+                }
+
+                for (TweetResponse tweet : tweets) {
+                    if (tweet.getQuoteTweetId() != null) {
+                        TweetResponse quote = quotedMap.get(tweet.getQuoteTweetId());
+                        if (quote != null) {
+                            tweet.setQuotedTweet(quote);
+                        }
+                    }
+                }
+            }
+        }
+        List<TweetResponse> orderedResult = new ArrayList<>();
+        for (Long id : tweetIds) {
+            TweetResponse tweet = tweetMap.get(id);
+            if (tweet != null) {
+                orderedResult.add(tweet);
+            }
+        }
+        return orderedResult;
     }
 
     @Override
@@ -53,6 +107,16 @@ public class TweetServiceImpl implements TweetService {
 
         if (tweet.getQuoteTweetId() != null) {
             created = tweetRepository.createQuoteTweet(tweet);
+            // Notify the owner of the quoted tweet
+            Tweet quotedTweet = tweetRepository.fetchTweetById(tweet.getQuoteTweetId());
+            if (quotedTweet != null) {
+                notificationService.notify(
+                        quotedTweet.getUserId(),
+                        tweet.getUserId(),
+                        NotificationType.QUOTE,
+                        created.getId(),
+                        null);
+            }
         } else {
             created = tweetRepository.createTweet(tweet);
         }
@@ -64,14 +128,9 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     public List<TweetResponse> getAllTweets(String userId) {
-        List<TweetResponse> tweets = new ArrayList<>();
         List<Long> tweetIds = tweetRepository.getAllTweetIds();
 
-        for (Long id : tweetIds) {
-            tweets.add(
-                    buildTweetResponse(id, userId, MAX_QUOTE_DEPTH));
-        }
-        return tweets;
+        return buildTweetResponses(tweetIds, userId, MAX_QUOTE_DEPTH);
     }
 
     @Override
@@ -88,12 +147,8 @@ public class TweetServiceImpl implements TweetService {
             throw new IllegalArgumentException("User ID cannot be empty");
         }
         List<Long> tweetIds = tweetRepository.getTweetIdsByUserId(targetUserId);
-        List<TweetResponse> tweets = new ArrayList<>();
-        for (Long id : tweetIds) {
-            tweets.add(
-                    buildTweetResponse(id, currentUserId, MAX_QUOTE_DEPTH));
-        }
-        return tweets;
+
+        return buildTweetResponses(tweetIds, currentUserId, MAX_QUOTE_DEPTH);
     }
 
     @Override

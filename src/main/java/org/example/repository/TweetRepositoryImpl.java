@@ -218,4 +218,79 @@ public class TweetRepositoryImpl implements TweetRepository {
         }
         return tweetIds;
     }
+
+    @Override
+    public List<TweetResponse> getTweetsById(List<Long> tweetIds, String currentUserId) {
+        if (tweetIds == null || tweetIds.isEmpty()) {
+            return new ArrayList<TweetResponse>();
+        }
+
+        StringBuilder placeHoldersBuilder = new StringBuilder();
+        for (int i = 0; i < tweetIds.size(); i++) {
+            placeHoldersBuilder.append("?");
+            if (i < tweetIds.size() - 1) {
+                placeHoldersBuilder.append(",");
+            }
+        }
+        String placeHolders = placeHoldersBuilder.toString();
+
+        String sql = """
+                    SELECT
+                        t.id, u.username,
+                        u.display_name, t.quote_tweet_id,
+                        t.user_id, t.content, u.profile_img_url,
+                        COALESCE(l.like_count, 0) AS like_count,
+                        (COALESCE(r.retweet_count, 0) + COALESCE(q.quote_count, 0)) AS retweet_count,
+                        EXISTS (
+                            SELECT 1 FROM likes l2
+                            WHERE l2.tweet_id = t.id AND l2.user_id = ?
+                        ) AS liked_by_current_user,
+
+                        EXISTS (
+                            SELECT 1 FROM retweets r2
+                            WHERE r2.tweet_id = t.id AND
+                            r2.user_id = ?
+                        ) AS retweeted_by_current_user,
+                        t.created_at
+                    FROM tweets t
+                    JOIN users u ON t.user_id = u.id
+                    LEFT JOIN (
+                        SELECT tweet_id, COUNT(*) AS like_count
+                        FROM likes
+                        GROUP BY tweet_id
+                    ) l ON t.id = l.tweet_id
+                    LEFT JOIN (
+                        SELECT tweet_id, COUNT(*) AS retweet_count
+                        FROM retweets
+                        GROUP BY tweet_id
+                    ) r ON t.id = r.tweet_id
+                    LEFT JOIN (
+                        SELECT quote_tweet_id, COUNT(*) AS quote_count
+                        FROM tweets
+                        WHERE quote_tweet_id IS NOT NULL
+                        GROUP BY quote_tweet_id
+                    ) q ON t.id = q.quote_tweet_id
+                """ + " WHERE t.id IN (" + placeHolders + ")";
+
+        List<TweetResponse> tweets = new ArrayList<TweetResponse>();
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, currentUserId);
+            preparedStatement.setString(2, currentUserId);
+
+            // bind the list of tweet ids
+            for (int i = 0; i < tweetIds.size(); i++) {
+                preparedStatement.setLong(3 + i, tweetIds.get(i));
+            }
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    tweets.add(tweetMapper.map(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return tweets;
+    }
 }

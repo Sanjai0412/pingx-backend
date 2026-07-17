@@ -30,5 +30,8 @@ public class AppBinder extends AbstractBinder {
 
         bind(FeedRepositoryImpl.class).to(FeedRepository.class).in(Singleton.class);
         bind(FeedServiceImpl.class).to(FeedService.class).in(Singleton.class);
+
+        bind(NotificationRepositoryImpl.class).to(NotificationRepository.class).in(Singleton.class);
+        bind(NotificationServiceImpl.class).to(NotificationService.class).in(Singleton.class);
     }
 }

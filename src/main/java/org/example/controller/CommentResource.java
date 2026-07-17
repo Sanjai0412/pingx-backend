@@ -11,6 +11,7 @@ import org.example.service.CommentService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -41,7 +42,6 @@ public class CommentResource {
             comment.setTweetId(tweetId);
             comment.setUserId(userId);
             CommentResponse createdComment = commentService.postComment(comment);
-            System.out.println(createdComment);
             return Response.status(Response.Status.OK)
                     .entity(ApiResponse.success("Comment posted successfully", createdComment))
                     .build();

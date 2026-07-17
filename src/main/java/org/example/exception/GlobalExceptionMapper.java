@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.exception;
 
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;

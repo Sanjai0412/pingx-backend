@@ -5,17 +5,24 @@ import java.util.List;
 
 import org.example.dto.CommentResponse;
 import org.example.model.Comment;
+import org.example.model.NotificationType;
 import org.example.repository.CommentRepository;
+import org.example.repository.TweetRepository;
 
 import jakarta.inject.Inject;
 
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
+    private final TweetRepository tweetRepository;
+    private final NotificationService notificationService;
 
     @Inject
-    public CommentServiceImpl(CommentRepository commentRepository) {
+    public CommentServiceImpl(CommentRepository commentRepository, TweetRepository tweetRepository,
+            NotificationService notificationService) {
         this.commentRepository = commentRepository;
+        this.tweetRepository = tweetRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -30,9 +37,18 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("User ID is required to post comment");
         }
 
-        CommentResponse created;
-
-        created = commentRepository.postComment(comment);
+        CommentResponse created = commentRepository.postComment(comment);
+        if (created != null) {
+            org.example.model.Tweet tweet = tweetRepository.fetchTweetById(comment.getTweetId());
+            if (tweet != null) {
+                notificationService.notify(
+                        tweet.getUserId(),
+                        comment.getUserId(),
+                        NotificationType.COMMENT,
+                        comment.getTweetId(),
+                        created.getId());
+            }
+        }
 
         return created;
     }
@@ -55,11 +71,11 @@ public class CommentServiceImpl implements CommentService {
         }
         List<Long> commentIds = commentRepository.getCommentsByTweetId(tweetId, currentUserId);
 
+        List<CommentResponse> comments = new ArrayList<>();
         if (commentIds.isEmpty()) {
-            throw new IllegalArgumentException("No comments found for the given tweet ID");
+            return comments;
         }
 
-        List<CommentResponse> comments = new ArrayList<>();
         for (Long commentId : commentIds) {
             comments.add(commentRepository.getCommentById(commentId, currentUserId));
         }

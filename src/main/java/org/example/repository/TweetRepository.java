@@ -16,5 +16,7 @@ public interface TweetRepository {
 
     TweetResponse getTweetById(Long tweetId, String userId);
 
+    List<TweetResponse> getTweetsById(List<Long> tweetIds, String currentUserId);
+
     List<Long> getTweetIdsByUserId(String targetUserId);
 }
