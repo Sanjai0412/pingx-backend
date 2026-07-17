@@ -8,7 +8,7 @@ public class Notification {
     private String actorId;
     private NotificationType type;
     private Long tweetId;
-    private Long commentId;
+    private Long replyTweetId;
     private boolean isRead;
     private ZonedDateTime createdAt;
 
@@ -16,13 +16,13 @@ public class Notification {
     }
 
     public Notification(Long id, String recipientId, String actorId, NotificationType type, Long tweetId,
-            Long commentId, boolean isRead, ZonedDateTime createdAt) {
+            Long replyTweetId, boolean isRead, ZonedDateTime createdAt) {
         this.id = id;
         this.recipientId = recipientId;
         this.actorId = actorId;
         this.type = type;
         this.tweetId = tweetId;
-        this.commentId = commentId;
+        this.replyTweetId = replyTweetId;
         this.isRead = isRead;
         this.createdAt = createdAt;
     }
@@ -67,12 +67,12 @@ public class Notification {
         this.tweetId = tweetId;
     }
 
-    public Long getCommentId() {
-        return commentId;
+    public Long getReplyTweetId() {
+        return replyTweetId;
     }
 
-    public void setCommentId(Long commentId) {
-        this.commentId = commentId;
+    public void setReplyTweetId(Long replyTweetId) {
+        this.replyTweetId = replyTweetId;
     }
 
     public boolean isRead() {

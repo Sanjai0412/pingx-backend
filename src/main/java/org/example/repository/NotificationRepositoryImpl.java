@@ -17,7 +17,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     @Override
     public void createNotification(Notification notification) {
         String sql = """
-                    INSERT INTO notifications(recipient_id, actor_id, type, tweet_id, comment_id)
+                    INSERT INTO notifications(recipient_id, actor_id, type, tweet_id, reply_tweet_id)
                     VALUES (?, ?, ?, ?, ?)
                 """;
         try (Connection conn = DatabaseConnection.getConnection();
@@ -31,8 +31,8 @@ public class NotificationRepositoryImpl implements NotificationRepository {
                 preparedStatement.setNull(4, java.sql.Types.BIGINT);
             }
 
-            if (notification.getCommentId() != null) {
-                preparedStatement.setLong(5, notification.getCommentId());
+            if (notification.getReplyTweetId() != null) {
+                preparedStatement.setLong(5, notification.getReplyTweetId());
             } else {
                 preparedStatement.setNull(5, java.sql.Types.BIGINT);
             }
@@ -66,9 +66,9 @@ public class NotificationRepositoryImpl implements NotificationRepository {
                     if (tweetId != null) {
                         notification.setTweetId(((Number) tweetId).longValue());
                     }
-                    Object commentId = resultSet.getObject("comment_id");
-                    if (commentId != null) {
-                        notification.setCommentId(((Number) commentId).longValue());
+                    Object replyTweetId = resultSet.getObject("reply_tweet_id");
+                    if (replyTweetId != null) {
+                        notification.setReplyTweetId(((Number) replyTweetId).longValue());
                     }
                     notification
                             .setCreatedAt(resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));
@@ -111,7 +111,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
             String actorId,
             NotificationType type,
             Long tweetId,
-            Long commentId) {
+            Long replyTweetId) {
         StringBuilder sql = new StringBuilder(
                 """
                                     DELETE FROM notifications
@@ -125,10 +125,10 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         } else {
             sql.append(" AND tweet_id IS NULL");
         }
-        if (commentId != null) {
-            sql.append(" AND comment_id = ?");
+        if (replyTweetId != null) {
+            sql.append(" AND reply_tweet_id = ?");
         } else {
-            sql.append(" AND comment_id IS NULL");
+            sql.append(" AND reply_tweet_id IS NULL");
         }
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement preparedStatement = conn.prepareStatement(sql.toString())) {
@@ -140,8 +140,8 @@ public class NotificationRepositoryImpl implements NotificationRepository {
             if (tweetId != null) {
                 preparedStatement.setLong(paramIndex++, tweetId);
             }
-            if (commentId != null) {
-                preparedStatement.setLong(paramIndex++, commentId);
+            if (replyTweetId != null) {
+                preparedStatement.setLong(paramIndex++, replyTweetId);
             }
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

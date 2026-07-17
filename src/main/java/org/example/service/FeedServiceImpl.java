@@ -71,4 +71,45 @@ public class FeedServiceImpl implements FeedService {
         return feedResponses;
     }
 
+    @Override
+    public List<FeedResponse> getUserFeed(String targetUserId, String currentUserId, int limit, int offset) {
+
+        List<FeedActivity> feedActivities = feedRepository.getUserFeedActivities(targetUserId, limit, offset);
+        List<FeedResponse> feedResponses = new ArrayList<>();
+
+        List<Long> tweetIds = new ArrayList<>();
+        for (FeedActivity activity : feedActivities) {
+            Long tweetId = activity.getTweetId();
+            if (!tweetIds.contains(tweetId)) {
+                tweetIds.add(tweetId);
+            }
+        }
+        List<TweetResponse> tweets = tweetService.buildTweetResponses(tweetIds, currentUserId, MAX_QUOTE_DEPTH);
+
+        Map<Long, TweetResponse> tweetMap = new HashMap<>();
+        for (TweetResponse tweet : tweets) {
+            tweetMap.put(tweet.getId(), tweet);
+        }
+
+        for (FeedActivity activity : feedActivities) {
+            TweetResponse tweet = tweetMap.get(activity.getTweetId());
+            if (tweet == null) {
+                continue;
+            }
+
+            FeedResponse feedResponse = new FeedResponse();
+            feedResponse.setTweet(tweet);
+            feedResponse.setType(activity.getType());
+            feedResponse.setActivityAt(activity.getActivityAt());
+
+            if (activity.getType() == FeedType.TWEET) {
+                feedResponse.setPerformedBy(tweet.getAuthor());
+            } else {
+                feedResponse.setPerformedBy(userService.getUserById(activity.getPerformedByUserId()));
+            }
+            feedResponses.add(feedResponse);
+        }
+        return feedResponses;
+    }
+
 }

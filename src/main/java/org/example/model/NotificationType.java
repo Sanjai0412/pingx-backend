@@ -5,5 +5,5 @@ public enum NotificationType {
     LIKE,
     RETWEET,
     QUOTE,
-    COMMENT
+    REPLY
 }

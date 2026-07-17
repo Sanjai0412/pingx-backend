@@ -121,11 +121,13 @@ public class TweetRepositoryImpl implements TweetRepository {
                 "    u.username, " +
                 "    u.display_name, " +
                 "    t.quote_tweet_id, " +
+                "    t.parent_tweet_id, " +
                 "    t.user_id, " +
                 "    t.content, " +
                 "    u.profile_img_url, " +
                 "    COALESCE(l.like_count, 0) AS like_count, " +
                 "    (COALESCE(r.retweet_count, 0) + COALESCE(q.quote_count, 0)) AS retweet_count, " +
+                "    COALESCE(rep.reply_count, 0) AS reply_count, " +
                 "    EXISTS ( " +
                 "        SELECT 1 " +
                 "        FROM likes l2 " +
@@ -174,6 +176,15 @@ public class TweetRepositoryImpl implements TweetRepository {
                 "    GROUP BY quote_tweet_id " +
                 ") q " +
                 "    ON t.id = q.quote_tweet_id " +
+                "LEFT JOIN ( " +
+                "    SELECT " +
+                "        parent_tweet_id, " +
+                "        COUNT(*) AS reply_count " +
+                "    FROM tweets " +
+                "    WHERE parent_tweet_id IS NOT NULL " +
+                "    GROUP BY parent_tweet_id " +
+                ") rep " +
+                "    ON t.id = rep.parent_tweet_id " +
                 "WHERE t.id = ? " +
                 "ORDER BY t.created_at DESC";
 
@@ -237,10 +248,11 @@ public class TweetRepositoryImpl implements TweetRepository {
         String sql = """
                     SELECT
                         t.id, u.username,
-                        u.display_name, t.quote_tweet_id,
+                        u.display_name, t.quote_tweet_id, t.parent_tweet_id,
                         t.user_id, t.content, u.profile_img_url,
                         COALESCE(l.like_count, 0) AS like_count,
                         (COALESCE(r.retweet_count, 0) + COALESCE(q.quote_count, 0)) AS retweet_count,
+                        COALESCE(rep.reply_count, 0) AS reply_count,
                         EXISTS (
                             SELECT 1 FROM likes l2
                             WHERE l2.tweet_id = t.id AND l2.user_id = ?
@@ -270,6 +282,12 @@ public class TweetRepositoryImpl implements TweetRepository {
                         WHERE quote_tweet_id IS NOT NULL
                         GROUP BY quote_tweet_id
                     ) q ON t.id = q.quote_tweet_id
+                    LEFT JOIN (
+                        SELECT parent_tweet_id, COUNT(*) AS reply_count
+                        FROM tweets
+                        WHERE parent_tweet_id IS NOT NULL
+                        GROUP BY parent_tweet_id
+                    ) rep ON t.id = rep.parent_tweet_id
                 """ + " WHERE t.id IN (" + placeHolders + ")";
 
         List<TweetResponse> tweets = new ArrayList<TweetResponse>();
@@ -292,5 +310,49 @@ public class TweetRepositoryImpl implements TweetRepository {
             throw new RuntimeException(e.getMessage());
         }
         return tweets;
+    }
+
+    @Override
+    public TweetResponse replyTweet(Tweet tweet) {
+        String sql = "INSERT INTO tweets (user_id, content, parent_tweet_id) VALUES (?, ?, ?) RETURNING id";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, tweet.getUserId());
+            preparedStatement.setString(2, tweet.getContent());
+            preparedStatement.setLong(3, tweet.getParentTweetId());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    Long newId = resultSet.getLong("id");
+                    // Fetch with full enrichment (counts, author, etc.)
+                    return getTweetById(newId, tweet.getUserId());
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public List<Long> getReplyTweetIdsByTweetId(Long tweetId) {
+        String sql = """
+                    SELECT t.id as tweet_id
+                    FROM tweets t
+                    WHERE t.parent_tweet_id = ?
+                    ORDER BY t.created_at DESC
+                """;
+        List<Long> tweetIds = new ArrayList<Long>();
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setLong(1, tweetId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    tweetIds.add(resultSet.getLong("tweet_id"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return tweetIds;
     }
 }

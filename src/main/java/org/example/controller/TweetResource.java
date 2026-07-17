@@ -209,4 +209,46 @@ public class TweetResource {
                     .build();
         }
     }
+
+    @Secured
+    @POST
+    @Path("/{tweetId}/reply")
+    public Response replyTweet(@PathParam("tweetId") Long tweetId, Tweet tweet,
+            @Context ContainerRequestContext context) {
+        try {
+            String userId = (String) context.getProperty("userId");
+            tweet.setUserId(userId);
+            tweet.setParentTweetId(tweetId);
+            TweetResponse reply = tweetService.replyTweet(tweet);
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.success("Reply posted successfully", reply))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage(), "INVALID_INPUT"))
+                    .build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error(e.getMessage(), "NOT_FOUND"))
+                    .build();
+        }
+    }
+
+    @Secured
+    @GET
+    @Path("/{tweetId}/replies")
+    public Response getRepliesByTweetId(@PathParam("tweetId") Long tweetId,
+            @Context ContainerRequestContext context) {
+        try {
+            String currentUserId = (String) context.getProperty("userId");
+            List<TweetResponse> replies = tweetService.getReplyTweetsByTweetId(tweetId, currentUserId);
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.success("Replies fetched successfully", replies))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage(), "INVALID_INPUT"))
+                    .build();
+        }
+    }
 }

@@ -8,7 +8,6 @@ import org.example.model.Notification;
 import org.example.model.NotificationType;
 import org.example.repository.NotificationRepository;
 import org.example.repository.TweetRepository;
-import org.example.repository.CommentRepository;
 
 import jakarta.inject.Inject;
 
@@ -16,16 +15,13 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserService userService;
     private final TweetRepository tweetRepository;
-    private final CommentRepository commentRepository;
 
     @Inject
     public NotificationServiceImpl(NotificationRepository notificationRepository,
             TweetRepository tweetRepository,
-            CommentRepository commentRepository,
             UserService userService) {
         this.notificationRepository = notificationRepository;
         this.tweetRepository = tweetRepository;
-        this.commentRepository = commentRepository;
         this.userService = userService;
     }
 
@@ -63,9 +59,9 @@ public class NotificationServiceImpl implements NotificationService {
                 response.setTweet(
                         tweetRepository.getTweetById(notification.getTweetId(), recipientId));
             }
-            if (notification.getCommentId() != null) {
-                response.setComment(
-                        commentRepository.getCommentById(notification.getCommentId(), recipientId));
+            if (notification.getReplyTweetId() != null) {
+                response.setReplyTweet(
+                        tweetRepository.getTweetById(notification.getReplyTweetId(), recipientId));
             }
             responses.add(response);
         }
@@ -90,14 +86,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteNotification(String recipientId, String actorId, NotificationType type, Long tweetId,
-            Long commentId) {
+            Long replyTweetId) {
 
         notificationRepository.deleteNotification(
                 recipientId,
                 actorId,
                 type,
                 tweetId,
-                commentId);
+                replyTweetId);
     }
 
     @Override
@@ -106,7 +102,7 @@ public class NotificationServiceImpl implements NotificationService {
             String actorId,
             NotificationType type,
             Long tweetId,
-            Long commentId) {
+            Long replyTweetId) {
 
         // Don't notify yourself
         if (recipientId.equals(actorId)) {
@@ -119,7 +115,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setActorId(actorId);
         notification.setType(type);
         notification.setTweetId(tweetId);
-        notification.setCommentId(commentId);
+        notification.setReplyTweetId(replyTweetId);
 
         notificationRepository.createNotification(notification);
     }

@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.example.config.Secured;
 import org.example.dto.TweetResponse;
+import org.example.dto.UserResponse;
 import org.example.dto.UserProfileResponse;
 import org.example.model.User;
 import org.example.model.ApiResponse;
@@ -63,26 +64,29 @@ public class UserResource {
         }
     }
 
-    // @GET
-    // @Path("/id/{userId}")
-    // @Consumes(MediaType.APPLICATION_JSON)
-    // @Produces(MediaType.APPLICATION_JSON)
-    // public Response getUserByUserId(@PathParam("userId") String userId) {
-    // try {
-    // User user = userService.getUserProfileById(userId);
-    // return Response.status(Response.Status.OK)
-    // .entity(ApiResponse.success("User fetched successfully", user))
-    // .build();
-    // } catch (IllegalArgumentException e) {
-    // return Response.status(Response.Status.NOT_FOUND)
-    // .entity(ApiResponse.error(e.getMessage(), "INVALID_USER"))
-    // .build();
-    // } catch (NotFoundException e) {
-    // return Response.status(Response.Status.NOT_FOUND)
-    // .entity(ApiResponse.error(e.getMessage(), "USER_NOT_FOUND"))
-    // .build();
-    // }
-    // }
+    @Secured
+    @PUT
+    @Path("/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUserProfile(User user, @Context ContainerRequestContext context) {
+        try {
+            String userId = (String) context.getProperty("userId");
+            user.setUserId(userId);
+            UserResponse response = userService.updateUser(user);
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.success("User profile updated successfully", response))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage(), "INVALID_INPUT"))
+                    .build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error(e.getMessage(), "USER_NOT_FOUND"))
+                    .build();
+        }
+    }
 
     @GET
     @Path("/{username}")

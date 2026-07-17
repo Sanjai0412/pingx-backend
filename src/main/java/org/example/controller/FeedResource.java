@@ -12,6 +12,7 @@ import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
@@ -40,6 +41,28 @@ public class FeedResource {
             List<FeedResponse> feed = feedService.getHomeFeed(userId, limit, offset);
             return Response.status(Response.Status.OK)
                     .entity(ApiResponse.success("Feed fetched successfully", feed))
+                    .build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error(e.getMessage(), "NOT_FOUND"))
+                    .build();
+        }
+    }
+
+    @GET
+    @Secured
+    @Path("/user/{userId}")
+    public Response getUserFeed(
+            @PathParam("userId") String targetUserId,
+            @QueryParam("limit") @DefaultValue("20") int limit,
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @Context ContainerRequestContext context) {
+
+        try {
+            String currentUserId = (String) context.getProperty("userId");
+            List<FeedResponse> feed = feedService.getUserFeed(targetUserId, currentUserId, limit, offset);
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.success("User feed fetched successfully", feed))
                     .build();
         } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND)

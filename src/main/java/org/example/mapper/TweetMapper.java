@@ -18,9 +18,11 @@ public class TweetMapper {
         author.setProfileImgUrl(resultSet.getString("profile_img_url"));
         tweet.setAuthor(author); // set author details in tweet response
         tweet.setQuoteTweetId(resultSet.getLong("quote_tweet_id"));
+        tweet.setParentTweetId(resultSet.getLong("parent_tweet_id"));
         tweet.setContent(resultSet.getString("content"));
         tweet.setLikeCount(resultSet.getInt("like_count"));
         tweet.setRetweetCount(resultSet.getInt("retweet_count"));
+        tweet.setReplyCount(resultSet.getInt("reply_count"));
         tweet.setLikedByCurrentUser(resultSet.getBoolean("liked_by_current_user"));
         tweet.setRetweetedByCurrentUser(resultSet.getBoolean("retweeted_by_current_user"));
         tweet.setCreatedAt(resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC")));

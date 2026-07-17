@@ -6,4 +6,6 @@ import org.example.dto.FeedResponse;
 
 public interface FeedService {
     List<FeedResponse> getHomeFeed(String currentUserId, int limit, int offset);
+
+    List<FeedResponse> getUserFeed(String username, String currentUserId, int limit, int offset);
 }

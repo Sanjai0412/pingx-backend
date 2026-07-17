@@ -9,7 +9,7 @@ public class NotificationResponse {
     private NotificationType type;
     private UserResponse actor;
     private TweetResponse tweet;
-    private CommentResponse comment;
+    private TweetResponse replyTweet;
     private boolean isRead;
     private ZonedDateTime createdAt;
 
@@ -48,12 +48,12 @@ public class NotificationResponse {
         this.tweet = tweet;
     }
 
-    public CommentResponse getComment() {
-        return comment;
+    public TweetResponse getReplyTweet() {
+        return replyTweet;
     }
 
-    public void setComment(CommentResponse comment) {
-        this.comment = comment;
+    public void setReplyTweet(TweetResponse replyTweet) {
+        this.replyTweet = replyTweet;
     }
 
     public boolean isRead() {

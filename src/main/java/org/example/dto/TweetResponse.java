@@ -3,6 +3,7 @@ package org.example.dto;
 import jakarta.json.bind.annotation.JsonbTransient;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 public class TweetResponse {
     private Long id;
@@ -10,32 +11,42 @@ public class TweetResponse {
     private String content;
     private int likeCount;
     private int retweetCount;
+    private int replyCount;
     private boolean retweetedByCurrentUser;
     private boolean likedByCurrentUser;
     private ZonedDateTime createdAt;
 
     private TweetResponse quotedTweet; // quoted tweet (if this is a quote post)
+    private TweetResponse parentTweet; // parent tweet (if this is a reply)
+    private List<TweetResponse> replies; // replies to this tweet
 
     @JsonbTransient
     private Long quoteTweetId;
+    @JsonbTransient
+    private Long parentTweetId;
 
     public TweetResponse() {
     }
 
     public TweetResponse(Long id, UserResponse author, String content, int likeCount,
-            int retweetCount, Long quotedTweetId, boolean retweetedByCurrentUser, boolean likedByCurrentUser,
+            int retweetCount, int replyCount, Long quotedTweetId, Long parentTweetId,
+            boolean retweetedByCurrentUser,
+            boolean likedByCurrentUser,
             ZonedDateTime createdAt,
-            TweetResponse quotedTweet) {
+            TweetResponse quotedTweet, TweetResponse parentTweet) {
         this.id = id;
         this.author = author;
         this.content = content;
         this.likeCount = likeCount;
         this.retweetCount = retweetCount;
+        this.replyCount = replyCount;
         this.quoteTweetId = quotedTweetId;
+        this.parentTweetId = parentTweetId;
         this.likedByCurrentUser = likedByCurrentUser;
         this.retweetedByCurrentUser = retweetedByCurrentUser;
         this.createdAt = createdAt;
         this.quotedTweet = quotedTweet;
+        this.parentTweet = parentTweet;
     }
 
     public Long getId() {
@@ -116,5 +127,37 @@ public class TweetResponse {
 
     public TweetResponse getQuotedTweet() {
         return this.quotedTweet;
+    }
+
+    public Long getParentTweetId() {
+        return this.parentTweetId;
+    }
+
+    public void setParentTweetId(Long parentTweetId) {
+        this.parentTweetId = parentTweetId;
+    }
+
+    public TweetResponse getParentTweet() {
+        return this.parentTweet;
+    }
+
+    public void setParentTweet(TweetResponse parentTweet) {
+        this.parentTweet = parentTweet;
+    }
+
+    public int getReplyCount() {
+        return replyCount;
+    }
+
+    public void setReplyCount(int replyCount) {
+        this.replyCount = replyCount;
+    }
+
+    public List<TweetResponse> getReplies() {
+        return replies;
+    }
+
+    public void setReplies(List<TweetResponse> replies) {
+        this.replies = replies;
     }
 }

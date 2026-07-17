@@ -13,4 +13,8 @@ public interface UserRepository {
     public UserProfileResponse getUserByUsername(String username);
 
     public List<User> searchUsers(String query, String excludeUserId);
+
+    public void updateUser(User user);
+
+    public User fetchUserById(String userId);
 }

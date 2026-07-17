@@ -163,4 +163,44 @@ public class TweetServiceImpl implements TweetService {
         }
         return tweetRepository.getTweetById(tweet.getId(), currentUserId);
     }
+
+    @Override
+    public TweetResponse replyTweet(Tweet tweet) {
+        if (tweet.getContent() == null || tweet.getContent().trim().isEmpty()) {
+            throw new IllegalArgumentException("Reply content cannot be empty");
+        }
+        if (tweet.getContent().length() > 280) {
+            throw new IllegalArgumentException("Reply content exceeds 280 characters");
+        }
+        if (tweet.getUserId() == null || tweet.getUserId().trim().isEmpty()) {
+            throw new IllegalArgumentException("User ID is required");
+        }
+        if (tweet.getParentTweetId() == null) {
+            throw new IllegalArgumentException("Parent tweet ID is required for a reply");
+        }
+
+        // Verify parent tweet exists
+        Tweet parent = tweetRepository.fetchTweetById(tweet.getParentTweetId());
+        if (parent == null) {
+            throw new IllegalArgumentException("Parent tweet not found");
+        }
+
+        TweetResponse created = tweetRepository.replyTweet(tweet);
+
+        // Notify the owner of the parent tweet
+        notificationService.notify(
+                parent.getUserId(),
+                tweet.getUserId(),
+                NotificationType.REPLY,
+                tweet.getParentTweetId(),
+                null);
+
+        return buildTweetResponse(created.getId(), tweet.getUserId(), MAX_QUOTE_DEPTH);
+    }
+
+    @Override
+    public List<TweetResponse> getReplyTweetsByTweetId(Long tweetId, String currentUserId) {
+        List<Long> replyIds = tweetRepository.getReplyTweetIdsByTweetId(tweetId);
+        return buildTweetResponses(replyIds, currentUserId, MAX_QUOTE_DEPTH);
+    }
 }

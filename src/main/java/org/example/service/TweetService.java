@@ -19,4 +19,9 @@ public interface TweetService {
     TweetResponse buildTweetResponse(Long tweetId, String currentUserId, int depth);
 
     List<TweetResponse> buildTweetResponses(List<Long> tweetIds, String currentUserId, int depth);
+
+    List<TweetResponse> getReplyTweetsByTweetId(Long tweetId, String currentUserId);
+
+    TweetResponse replyTweet(Tweet tweet);
+
 }

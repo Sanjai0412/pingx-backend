@@ -6,4 +6,6 @@ import org.example.model.FeedActivity;
 
 public interface FeedRepository {
     List<FeedActivity> getHomeFeedActivities(String currentUserId, int limit, int offset);
+
+    List<FeedActivity> getUserFeedActivities(String targetUserId, int limit, int offset);
 }

@@ -4,6 +4,8 @@ import org.example.config.DatabaseConnection;
 import org.example.dto.UserProfileResponse;
 import org.example.dto.UserResponse;
 import org.example.model.User;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
 import java.time.ZoneId;
@@ -89,7 +91,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public List<User> searchUsers(String query, String excludeUserId) {
-        List<User> users = new java.util.ArrayList<>();
+        List<User> users = new ArrayList<>();
         String sql;
         boolean hasQuery = query != null && !query.trim().isEmpty();
 
@@ -126,5 +128,47 @@ public class UserRepositoryImpl implements UserRepository {
             throw new RuntimeException(e.getMessage());
         }
         return users;
+    }
+
+    @Override
+    public void updateUser(User user) {
+        String sql = "UPDATE users SET username = ?, display_name = ?, bio = ?, profile_img_url = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, user.getUsername());
+            preparedStatement.setString(2, user.getDisplayName());
+            preparedStatement.setString(3, user.getBio());
+            preparedStatement.setString(4, user.getProfileImgUrl());
+            preparedStatement.setString(5, user.getUserId());
+
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @Override
+    public User fetchUserById(String userId) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, userId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new User(
+                            resultSet.getString("id"),
+                            resultSet.getString("username"),
+                            resultSet.getString("display_name"),
+                            resultSet.getString("bio"),
+                            resultSet.getString("profile_img_url"),
+                            resultSet.getTimestamp("created_at").toInstant().atZone(java.time.ZoneId.of("UTC")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return null;
     }
 }

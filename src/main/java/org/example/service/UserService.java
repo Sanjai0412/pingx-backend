@@ -14,4 +14,6 @@ public interface UserService {
     public UserProfileResponse getUserProfileByUsername(String username);
 
     public List<User> searchUsers(String query, String excludeUserId);
+
+    public UserResponse updateUser(User user);
 }

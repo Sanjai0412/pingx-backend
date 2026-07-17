@@ -7,16 +7,19 @@ public class Tweet {
     private String userId;
     private String content;
     private Long quoteTweetId;
+    private Long parentTweetId;
     private ZonedDateTime createdAt;
 
     public Tweet() {
     };
 
-    public Tweet(Long id, String userId, String content, Long quoteTweetId, ZonedDateTime createdAt) {
+    public Tweet(Long id, String userId, String content, Long quoteTweetId, Long parentTweetId,
+            ZonedDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.content = content;
         this.quoteTweetId = quoteTweetId;
+        this.parentTweetId = parentTweetId;
         this.createdAt = createdAt;
     }
 
@@ -50,6 +53,14 @@ public class Tweet {
 
     public void setQuoteTweetId(Long quoteTweetId) {
         this.quoteTweetId = quoteTweetId;
+    }
+
+    public Long getParentTweetId() {
+        return parentTweetId;
+    }
+
+    public void setParentTweetId(Long parentTweetId) {
+        this.parentTweetId = parentTweetId;
     }
 
     public ZonedDateTime getCreatedAt() {
