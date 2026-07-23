@@ -1,6 +1,5 @@
 package org.example.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -19,9 +18,8 @@ import javax.crypto.SecretKey;
 @Provider
 @Secured
 public class JwtAuthFilter implements ContainerRequestFilter {
-    public static final Dotenv DOTENV = Dotenv.load();
-    public static final String ACCESS_TOKEN_SECRET = DOTENV.get("ACCESS_TOKEN_SECRET");
-
+    public static final String ACCESS_TOKEN_SECRET =
+            System.getenv("ACCESS_TOKEN_SECRET");
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
 
