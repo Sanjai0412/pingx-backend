@@ -70,7 +70,7 @@ CREATE TABLE notifications (
     type VARCHAR(20) NOT NULL,
 
     tweet_id BIGINT,
-    comment_id BIGINT,
+    reply_tweet_id BIGINT,
 
     is_read BOOLEAN DEFAULT FALSE,
 
@@ -79,5 +79,5 @@ CREATE TABLE notifications (
     CONSTRAINT fk_recipient FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_notification_tweet FOREIGN KEY (tweet_id) REFERENCES tweets(id) ON DELETE CASCADE,
-    CONSTRAINT fk_notification_comment FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE
+    CONSTRAINT fk_notification_reply FOREIGN KEY (reply_tweet_id) REFERENCES tweets(id) ON DELETE CASCADE
 );

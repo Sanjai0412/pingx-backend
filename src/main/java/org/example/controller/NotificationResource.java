@@ -6,7 +6,6 @@ import org.example.config.Secured;
 import org.example.dto.NotificationResponse;
 import org.example.model.ApiResponse;
 import org.example.service.NotificationService;
-import org.jvnet.hk2.annotations.Service;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;

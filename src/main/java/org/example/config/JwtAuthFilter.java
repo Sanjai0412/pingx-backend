@@ -12,13 +12,15 @@ import jakarta.ws.rs.ext.Provider;
 import org.example.model.ApiResponse;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import javax.crypto.SecretKey;
 
 @Provider
 @Secured
 public class JwtAuthFilter implements ContainerRequestFilter {
-    public static final String SECRET_KEY = Dotenv.load().get("ACCESS_TOKEN_SECRET");
+    public static final Dotenv DOTENV = Dotenv.load();
+    public static final String ACCESS_TOKEN_SECRET = DOTENV.get("ACCESS_TOKEN_SECRET");
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -34,7 +36,7 @@ public class JwtAuthFilter implements ContainerRequestFilter {
         String token = cookie.getValue(); // access token
 
         try {
-            SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+            SecretKey key = Keys.hmacShaKeyFor(ACCESS_TOKEN_SECRET.getBytes(StandardCharsets.UTF_8));
             Claims claims = Jwts.parser()
                     .verifyWith(key)
                     .build()

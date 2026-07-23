@@ -16,12 +16,10 @@ public class DatabaseConnection {
     HikariConfig hikariConfig = new HikariConfig();
 
     hikariConfig.setJdbcUrl(dotenv.get("DB_URL"));
-    hikariConfig.setUsername(dotenv.get("DB_USER"));
-    hikariConfig.setPassword(dotenv.get("DB_PASSWORD"));
-
     dataSource = new HikariDataSource(hikariConfig);
   }
-  public static Connection getConnection() throws SQLException{
-      return dataSource.getConnection();
+
+  public static Connection getConnection() throws SQLException {
+    return dataSource.getConnection();
   }
 }
