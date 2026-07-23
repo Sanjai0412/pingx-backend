@@ -1,6 +1,5 @@
 package org.example.service;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.inject.Inject;
 import org.example.dto.TweetResponse;
 import org.example.model.Tweet;
@@ -17,7 +16,7 @@ import java.util.Set;
 public class TweetServiceImpl implements TweetService {
     private final TweetRepository tweetRepository;
     private final NotificationService notificationService;
-    private static final int MAX_QUOTE_DEPTH = Integer.parseInt(Dotenv.load().get("MAX_QUOTE_DEPTH"));
+    private static final int MAX_QUOTE_DEPTH = Integer.parseInt(System.getenv("MAX_QUOTE_DEPTH"));
 
     // HK2 reads this annotation and passes in the TweetRepositoryImpl obj
     @Inject

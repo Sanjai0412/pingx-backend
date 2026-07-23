@@ -11,14 +11,13 @@ import org.example.dto.TweetResponse;
 import org.example.model.FeedActivity;
 import org.example.repository.FeedRepository;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.inject.Inject;
 
 public class FeedServiceImpl implements FeedService {
     private final TweetService tweetService;
     private final FeedRepository feedRepository;
     private final UserService userService;
-    private static final int MAX_QUOTE_DEPTH = Integer.parseInt(Dotenv.load().get("MAX_QUOTE_DEPTH"));
+    private static final int MAX_QUOTE_DEPTH = Integer.parseInt(System.getenv("MAX_QUOTE_DEPTH"));
 
     @Inject
     public FeedServiceImpl(TweetService tweetService, FeedRepository feedRepository, UserService userService) {

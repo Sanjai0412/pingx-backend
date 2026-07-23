@@ -5,18 +5,16 @@ import java.util.Map;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import io.github.cdimascio.dotenv.Dotenv;
 
 public class ImageUploadServiceImpl implements ImageUploadService {
     private final Cloudinary cloudinary;
 
     // Initialize cloudinary instance
     public ImageUploadServiceImpl() {
-        Dotenv dotenv = Dotenv.load();
         this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", dotenv.get("MY_CLOUD_NAME"),
-                "api_key", dotenv.get("MY_API_KEY"),
-                "api_secret", dotenv.get("MY_API_SECRET"),
+                "cloud_name", System.getenv("MY_CLOUD_NAME"),
+                "api_key", System.getenv("MY_API_KEY"),
+                "api_secret", System.getenv("MY_API_SECRET"),
                 "secure", true));
     }
 

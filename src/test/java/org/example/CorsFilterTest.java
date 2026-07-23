@@ -7,7 +7,6 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import org.example.config.CorsFilter;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 
@@ -22,7 +21,7 @@ public class CorsFilterTest {
         ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
 
         when(requestContext.getMethod()).thenReturn("OPTIONS");
-        when(requestContext.getHeaderString("Origin")).thenReturn("http://localhost:5173");
+        when(requestContext.getHeaderString("Origin")).thenReturn("https://pingx-sanjaii04.vercel.app");
 
         filter.filter(requestContext);
 
@@ -35,7 +34,7 @@ public class CorsFilterTest {
         ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
 
         when(requestContext.getMethod()).thenReturn("GET");
-        when(requestContext.getHeaderString("Origin")).thenReturn("http://localhost:5173");
+        when(requestContext.getHeaderString("Origin")).thenReturn("https://pingx-sanjaii04.vercel.app");
 
         filter.filter(requestContext);
 
@@ -49,12 +48,12 @@ public class CorsFilterTest {
         ContainerResponseContext responseContext = mock(ContainerResponseContext.class);
         MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
 
-        when(requestContext.getHeaderString("Origin")).thenReturn("http://localhost:5173");
+        when(requestContext.getHeaderString("Origin")).thenReturn("https://pingx-sanjaii04.vercel.app");
         when(responseContext.getHeaders()).thenReturn(headers);
 
         filter.filter(requestContext, responseContext);
 
-        assertEquals("http://localhost:5173", headers.getFirst("Access-Control-Allow-Origin"));
+        assertEquals("https://pingx-sanjaii04.vercel.app", headers.getFirst("Access-Control-Allow-Origin"));
         assertEquals("true", headers.getFirst("Access-Control-Allow-Credentials"));
         assertEquals("GET, POST, PUT, DELETE, OPTIONS, HEAD", headers.getFirst("Access-Control-Allow-Methods"));
         assertEquals("Origin, Content-Type, Accept, Authorization", headers.getFirst("Access-Control-Allow-Headers"));
