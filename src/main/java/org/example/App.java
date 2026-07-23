@@ -1,5 +1,6 @@
 package org.example;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.example.config.AppBinder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -9,7 +10,8 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import java.net.URI;
 
 public class App {
-    public static final String BASE_URL = "http://localhost:8080/api/";
+    static Dotenv dotenv = Dotenv.load();
+    public static final String BASE_URL = dotenv.get("BASE_URL");
 
     public static HttpServer startServer() {
         // For Dependency Injection (DI)
