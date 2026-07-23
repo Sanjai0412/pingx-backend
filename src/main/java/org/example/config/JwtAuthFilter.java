@@ -18,14 +18,16 @@ import javax.crypto.SecretKey;
 @Provider
 @Secured
 public class JwtAuthFilter implements ContainerRequestFilter {
-    public static final String ACCESS_TOKEN_SECRET =
-            System.getenv("ACCESS_TOKEN_SECRET");
+    public static final String ACCESS_TOKEN_SECRET = System.getenv("ACCESS_TOKEN_SECRET");
+
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
 
         // Get the access token from http cookie
-        Cookie cookie = requestContext.getCookies().get("accessToken");
+        System.out.println("Path: " + requestContext.getUriInfo().getPath());
 
+        Cookie cookie = requestContext.getCookies().get("accessToken");
+        System.out.println("Cookie: " + cookie);
         if (cookie == null) {
             abortWithUnauthorized(requestContext, "Access token is missing");
             return;
@@ -44,6 +46,7 @@ public class JwtAuthFilter implements ContainerRequestFilter {
             String userId = claims.get("userId", String.class);
             String username = claims.get("username", String.class);
 
+            System.out.println("UserId: " + userId);
             requestContext.setProperty("userId", userId);
             requestContext.setProperty("username", username);
         } catch (Exception e) {

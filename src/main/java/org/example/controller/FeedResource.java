@@ -36,6 +36,8 @@ public class FeedResource {
             @Context ContainerRequestContext context) {
 
         try {
+            System.out.println("Feed endpoint reached");
+            System.out.println("UserId = " + context.getProperty("userId"));
             String userId = (String) context.getProperty("userId");
 
             List<FeedResponse> feed = feedService.getHomeFeed(userId, limit, offset);
