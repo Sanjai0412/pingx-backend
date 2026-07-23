@@ -5,7 +5,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
-import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import org.example.model.ApiResponse;
@@ -23,17 +22,14 @@ public class JwtAuthFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
 
-        // Get the access token from http cookie
-        System.out.println("Path: " + requestContext.getUriInfo().getPath());
-
-        Cookie cookie = requestContext.getCookies().get("accessToken");
-        System.out.println("Cookie: " + cookie);
-        if (cookie == null) {
+        // Get the access token from Authorization header
+        String authHeader = requestContext.getHeaderString("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             abortWithUnauthorized(requestContext, "Access token is missing");
             return;
         }
 
-        String token = cookie.getValue(); // access token
+        String token = authHeader.substring(7); // Strip "Bearer " prefix
 
         try {
             SecretKey key = Keys.hmacShaKeyFor(ACCESS_TOKEN_SECRET.getBytes(StandardCharsets.UTF_8));
@@ -46,7 +42,6 @@ public class JwtAuthFilter implements ContainerRequestFilter {
             String userId = claims.get("userId", String.class);
             String username = claims.get("username", String.class);
 
-            System.out.println("UserId: " + userId);
             requestContext.setProperty("userId", userId);
             requestContext.setProperty("username", username);
         } catch (Exception e) {
