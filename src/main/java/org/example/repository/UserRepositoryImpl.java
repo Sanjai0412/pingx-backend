@@ -171,4 +171,30 @@ public class UserRepositoryImpl implements UserRepository {
         }
         return null;
     }
+
+    @Override
+    public List<User> getSuggestedUsers(String excludeUserId, int limit) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE id != ? LIMIT ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, excludeUserId);
+            preparedStatement.setInt(2, limit);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    users.add(new User(
+                            resultSet.getString("id"),
+                            resultSet.getString("username"),
+                            resultSet.getString("display_name"),
+                            resultSet.getString("bio"),
+                            resultSet.getString("profile_img_url"),
+                            resultSet.getTimestamp("created_at").toInstant().atZone(ZoneId.of("UTC"))));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return users;
+    }
 }

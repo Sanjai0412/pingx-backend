@@ -10,9 +10,14 @@ import java.net.URI;
 
 public class App {
 
+    private static final String HOST = System.getenv().getOrDefault("HOST", "0.0.0.0");
+
+    private static final String PORT = System.getenv().getOrDefault("PORT", "8080");
+
+    private static final String BASE_PATH = "/api/";
+
     private static String getBaseUrl() {
-        String port = System.getenv().getOrDefault("PORT", "8080");
-        return "http://0.0.0.0:" + port + "/api/";
+        return "http://" + HOST + ":" + PORT + BASE_PATH;
     }
 
     public static HttpServer startServer() {

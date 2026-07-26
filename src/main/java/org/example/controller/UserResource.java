@@ -224,6 +224,25 @@ public class UserResource {
 
     @Secured
     @GET
+    @Path("/suggesstions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getSuggesstionList(@Context ContainerRequestContext context) {
+        try {
+            String currentUserId = (String) context.getProperty("userId");
+            List<User> suggestedUsers = userService.getSuggestedUsers(currentUserId, 10);
+            return Response.status(Response.Status.OK)
+                    .entity(ApiResponse.success("Suggested users fetched successfully", suggestedUsers))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage(), "INVALID_USER_ID"))
+                    .build();
+        }
+    }
+
+    @Secured
+    @GET
     @Path("/search")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

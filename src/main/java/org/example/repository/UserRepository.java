@@ -14,6 +14,8 @@ public interface UserRepository {
 
     public List<User> searchUsers(String query, String excludeUserId);
 
+    public List<User> getSuggestedUsers(String excludeUserId, int limit);
+
     public void updateUser(User user);
 
     public User fetchUserById(String userId);

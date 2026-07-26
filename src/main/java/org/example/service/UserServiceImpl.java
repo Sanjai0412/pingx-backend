@@ -103,7 +103,14 @@ public class UserServiceImpl implements UserService {
                 existing.getUserId(),
                 existing.getUsername(),
                 existing.getDisplayName(),
-                existing.getProfileImgUrl()
-        );
+                existing.getProfileImgUrl());
+    }
+
+    @Override
+    public List<User> getSuggestedUsers(String excludeUserId, int limit) {
+        if (excludeUserId == null || excludeUserId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Exclude user ID is required");
+        }
+        return userRepository.getSuggestedUsers(excludeUserId, limit);
     }
 }
