@@ -30,9 +30,10 @@ PingX is a Twitter/X-inspired social media backend built with Java 17, Jersey (J
 - Suggested users recommendations (`GET /api/users/suggesstions`).
 - Follow & Unfollow users (`POST /api/users/{userId}/follow`, `DELETE /api/users/{userId}/unfollow`, `GET /api/users/{userId}/is-following`).
 
-### Activity Feed (Home & User Feed)
+### Activity Feed & Database Performance
 - Activity-based feed architecture returning original tweets, retweets, and quote tweets ordered by activity timestamp.
 - High-performance `limit` & `offset` pagination (`GET /api/feed/?limit=20&offset=0` and `GET /api/feed/user/{userId}?limit=20&offset=0`).
+- **PostgreSQL Database Indexing:** Optimized query execution latency using B-tree composite database indexes on high-throughput query columns (`user_id`, `created_at DESC`, `followed_id`, `recipient_id`).
 
 ### Tweet System
 - Post original tweets and quote tweets (`POST /api/tweets/`).
