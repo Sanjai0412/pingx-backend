@@ -11,8 +11,6 @@ public interface NotificationService {
 
         List<NotificationResponse> getNotificationsByRecipientId(String recipientId);
 
-        void markAsRead(Long notificationId);
-
         void markAllAsRead(String recipientId);
 
         int getUnreadNotificationCount(String recipientId);

@@ -83,18 +83,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     @Override
-    public void markAsRead(Long notificationId) {
-        String sql = "UPDATE notifications SET is_read = true WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, notificationId);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    @Override
     public void markAllAsRead(String recipientId) {
         String sql = "UPDATE notifications SET is_read = true WHERE recipient_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();

@@ -6,6 +6,4 @@ public interface LikeRepository {
     boolean unlikeTweet(String userId, Long tweetId);
 
     boolean isLiked(String userId, Long tweetId);
-
-    long getLikesCount(Long tweetId);
 }

@@ -34,7 +34,7 @@ public class RetweetServiceImpl implements RetweetService {
         if (retweetRepository.hasUserRetweetedTweet(userId, tweetId)) {
             throw new ConflictException("Tweet already retweeted");
         }
-        
+
         boolean result = retweetRepository.retweetTweet(userId, tweetId);
         if (result) {
             String tweetOwnerId = tweetRepository.fetchTweetById(tweetId).getUserId();
@@ -62,7 +62,7 @@ public class RetweetServiceImpl implements RetweetService {
         if (!retweetRepository.hasUserRetweetedTweet(userId, tweetId)) {
             throw new ConflictException("Tweet not retweeted by this user");
         }
-        
+
         boolean result = retweetRepository.undoRetweet(userId, tweetId);
         if (result) {
             String tweetOwnerId = tweetRepository.fetchTweetById(tweetId).getUserId();
@@ -88,17 +88,6 @@ public class RetweetServiceImpl implements RetweetService {
             throw new NotFoundException("Tweet not found");
         }
         return retweetRepository.hasUserRetweetedTweet(userId, tweetId);
-    }
-
-    @Override
-    public long getRetweetCount(Long tweetId, String userId) {
-        if (tweetId == null) {
-            throw new IllegalArgumentException("Tweet ID cannot be null");
-        }
-        if (tweetRepository.getTweetById(tweetId, userId) == null) {
-            throw new NotFoundException("Tweet not found");
-        }
-        return retweetRepository.getRetweetsCount(tweetId);
     }
 
 }

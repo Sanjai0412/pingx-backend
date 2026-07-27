@@ -69,14 +69,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void markAsRead(Long notificationId) {
-        if (notificationId == null) {
-            throw new IllegalArgumentException("Notification ID cannot be null");
-        }
-        notificationRepository.markAsRead(notificationId);
-    }
-
-    @Override
     public void markAllAsRead(String recipientId) {
         if (recipientId.isEmpty()) {
             throw new IllegalArgumentException("Recipient ID cannot be null");

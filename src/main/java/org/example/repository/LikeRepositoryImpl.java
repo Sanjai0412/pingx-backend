@@ -50,20 +50,5 @@ public class LikeRepositoryImpl implements LikeRepository {
         }
     }
 
-    @Override
-    public long getLikesCount(Long tweetId) {
-        String sql = "SELECT COUNT(*) FROM likes WHERE tweet_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, tweetId);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    return resultSet.getLong(1);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-        return 0;
-    }
+
 }

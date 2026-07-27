@@ -85,11 +85,4 @@ public class LikeServiceImpl implements LikeService {
         return likeRepository.isLiked(userId, tweetId);
     }
 
-    @Override
-    public long getLikeCount(Long tweetId) {
-        if (tweetId == null) {
-            throw new IllegalArgumentException("Tweet ID cannot be null");
-        }
-        return likeRepository.getLikesCount(tweetId);
-    }
 }

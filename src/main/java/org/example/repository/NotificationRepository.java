@@ -10,8 +10,6 @@ public interface NotificationRepository {
 
     List<Notification> getNotificationsByRecipientId(String recipientId);
 
-    void markAsRead(Long notificationId);
-
     void markAllAsRead(String recipientId);
 
     int getUnreadNotificationCount(String recipientId);

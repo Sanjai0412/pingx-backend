@@ -126,13 +126,6 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
-    public List<TweetResponse> getAllTweets(String userId) {
-        List<Long> tweetIds = tweetRepository.getAllTweetIds();
-
-        return buildTweetResponses(tweetIds, userId, MAX_QUOTE_DEPTH);
-    }
-
-    @Override
     public TweetResponse getTweetById(Long tweetId, String userId) {
         if (tweetId == null) {
             throw new IllegalArgumentException("Tweet ID cannot be empty");
@@ -148,19 +141,6 @@ public class TweetServiceImpl implements TweetService {
         List<Long> tweetIds = tweetRepository.getTweetIdsByUserId(targetUserId);
 
         return buildTweetResponses(tweetIds, currentUserId, MAX_QUOTE_DEPTH);
-    }
-
-    @Override
-    public TweetResponse getRootTweet(Long tweetId, String currentUserId) {
-        Tweet tweet = tweetRepository.fetchTweetById(tweetId);
-
-        if (tweet == null)
-            return null;
-
-        while (tweet.getQuoteTweetId() != null) {
-            tweet = tweetRepository.fetchTweetById(tweet.getQuoteTweetId());
-        }
-        return tweetRepository.getTweetById(tweet.getId(), currentUserId);
     }
 
     @Override

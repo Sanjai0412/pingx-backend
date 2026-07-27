@@ -6,6 +6,4 @@ public interface RetweetService {
     boolean undoRetweet(String userId, Long tweetId);
 
     boolean hasUserRetweetedTweet(String userId, Long tweetId);
-
-    long getRetweetCount(Long tweetId, String userId);
 }

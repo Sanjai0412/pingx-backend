@@ -50,23 +50,7 @@ public class TweetResource {
         }
     }
 
-    @Secured
-    @GET
-    @Path("/")
-    public Response getAllTweets(@Context ContainerRequestContext context) {
-        try {
-            // get the userId from req body, which is from jwt access token
-            String userId = (String) context.getProperty("userId");
-            List<TweetResponse> tweets = tweetService.getAllTweets(userId);
-            return Response.status(Response.Status.OK)
-                    .entity(ApiResponse.success("Tweet fetched successfully", tweets))
-                    .build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(ApiResponse.error(e.getMessage(), "NO_TWEETS"))
-                    .build();
-        }
-    }
+
 
     @Secured
     @GET
@@ -189,26 +173,7 @@ public class TweetResource {
         }
     }
 
-    @Secured
-    @GET
-    @Path("/{tweetId}/original")
-    public Response getRootTweet(@PathParam("tweetId") Long tweetId, @Context ContainerRequestContext context) {
-        try {
-            String currentUserId = (String) context.getProperty("userId");
-            TweetResponse rootTweet = tweetService.getRootTweet(tweetId, currentUserId);
-            return Response.status(Response.Status.OK)
-                    .entity(ApiResponse.success("", rootTweet))
-                    .build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(ApiResponse.error(e.getMessage(), "INVALID_INPUT"))
-                    .build();
-        } catch (NotFoundException e) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(ApiResponse.error(e.getMessage(), "NOT_FOUND"))
-                    .build();
-        }
-    }
+
 
     @Secured
     @POST

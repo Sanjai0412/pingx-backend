@@ -1,255 +1,168 @@
 # PingX - Backend API Service
 
-PingX is a Twitter/X-inspired social media backend built with Java, Jersey (JAX-RS), PostgreSQL, and Grizzly HTTP Server. It provides RESTful APIs for authentication, user management, activity feeds, tweets, reposts, quote tweets, comments, and social interactions.
+PingX is a Twitter/X-inspired social media backend built with Java 17, Jersey (JAX-RS), PostgreSQL, and Grizzly HTTP Server. It provides RESTful APIs for authentication, user profiles, activity feeds, tweets, retweets, quote tweets, comments/replies, notifications, and media uploads.
+
+---
+
+## Live Deployments
+
+| Service | Platform | URL / Base Endpoint |
+| :--- | :--- | :--- |
+| **Backend API Service** | Railway | [https://pingx-backend-production.up.railway.app](https://pingx-backend-production.up.railway.app) |
+
+### Connected Services
+- **PingX Frontend:** [https://pingx-sanjaii04.vercel.app](https://pingx-sanjaii04.vercel.app)
+- **Auth Microservice:** [https://auth-service-production-4ccd.up.railway.app](https://auth-service-production-4ccd.up.railway.app)
 
 ---
 
 ## Features
 
 ### Authentication & Security
-- JWT-based stateless authentication
-- Request authorization using Jersey filters
-- Protected API endpoints
+- `Authorization: Bearer <token>` header validation for protected endpoints.
+- Integration with external Auth Service for JWT issuance & token refresh.
+- Jersey `@Secured` annotation & container request filter.
 
-### User Management
-- User registration and login
-- User profile management
-- Follow and unfollow users
-- User search
-- Profile information with followers/following counts
+### User & Profile Management
+- User profile registration (`POST /api/users/`) & update (`PUT /api/users/update`).
+- Fetch user profiles by username with follower, following, and tweet counts (`GET /api/users/{username}`).
+- Search users (`GET /api/users/search?q=query`).
+- Suggested users recommendations (`GET /api/users/suggesstions`).
+- Follow & Unfollow users (`POST /api/users/{userId}/follow`, `DELETE /api/users/{userId}/unfollow`, `GET /api/users/{userId}/is-following`).
+
+### Activity Feed (Home & User Feed)
+- Activity-based feed architecture returning original tweets, retweets, and quote tweets ordered by activity timestamp.
+- High-performance `limit` & `offset` pagination (`GET /api/feed/?limit=20&offset=0` and `GET /api/feed/user/{userId}?limit=20&offset=0`).
 
 ### Tweet System
-- Create tweets
-- Delete tweets
-- View tweet details
-- Like and unlike tweets
-- Quote tweets (recursive rendering)
-- Reposts (Retweets)
-- View original tweet support
+- Post original tweets and quote tweets (`POST /api/tweets/`).
+- View individual tweet details (`GET /api/tweets/{tweetId}`).
+- Fetch user tweets (`GET /api/users/{userId}/tweets`).
+- Like & Unlike tweets (`POST /api/tweets/{tweetId}/like`, `DELETE /api/tweets/{tweetId}/like`).
+- Retweet & Undo Retweet (`POST /api/tweets/{tweetId}/retweet`, `DELETE /api/tweets/{tweetId}/retweet`).
+- Recursive quote tweet rendering up to configured depth limit (`MAX_QUOTE_DEPTH`).
 
-### Home Feed
-- Activity-based timeline
-- Displays:
-  - Original tweets
-  - Reposts
-  - Quote tweets
-- Feed ordered by activity timestamp
-- Pagination using LIMIT/OFFSET
+### Comments & Replies
+- Post replies to tweets (`POST /api/tweets/{tweetId}/reply`).
+- Fetch replies for a tweet (`GET /api/tweets/{tweetId}/replies`).
 
-### Comments
-- Create comments
-- Fetch comments for a tweet
-- Nested comment structure ready for replies
-- Comment like infrastructure
+### Notification System
+- Real-time event notifications generated for **Follows**, **Likes**, **Retweets**, **Quotes**, and **Replies**.
+- Fetch user notifications (`GET /api/notifications/`).
+- Mark all notifications as read (`POST /api/notifications/read`).
+- Unread notification count badge (`GET /api/notifications/unread-count`).
 
-### Media
-- Cloudinary integration
-- Profile image uploads
-- Tweet image uploads
-- Multipart file handling
+### Media & Cloud Storage
+- Multipart image uploads integrated with Cloudinary (`POST /api/users/upload-image`).
 
-### Database
-- PostgreSQL
-- JDBC repositories
-- HikariCP connection pooling
+### Database & Performance
+- PostgreSQL relational schema.
+- JDBC Repositories using HikariCP high-performance connection pooling.
 
 ---
 
-# Technology Stack
+## Technology Stack
 
-- Language: Java 17
-- REST Framework: Jersey (JAX-RS)
-- HTTP Server: Grizzly
-- Database: PostgreSQL
-- Connection Pool: HikariCP
-- Authentication: JWT (JJWT)
-- Cloud Storage: Cloudinary
-- Dependency Management: Maven
+- **Language:** Java 17
+- **REST Framework:** Jersey (JAX-RS) 3.x
+- **HTTP Server:** Grizzly Server
+- **Database:** PostgreSQL
+- **Connection Pool:** HikariCP
+- **Cloud Storage:** Cloudinary SDK
+- **Dependency Management:** Maven
 
 ---
 
-# Architecture
-
-The project follows a layered architecture.
+## Architecture & Layering
 
 ```text
-Client
-      │
-      ▼
-Resource Layer (Controllers)
-      │
-      ▼
-Service Layer
-      │
-      ▼
-Repository Layer
-      │
-      ▼
-PostgreSQL
+Client (React Frontend on Vercel)
+       │
+       ▼
+Resource Layer (JAX-RS Controllers)
+       │
+       ▼
+Service Layer (Business Logic & Notifications)
+       │
+       ▼
+Repository Layer (HikariCP + JDBC)
+       │
+       ▼
+PostgreSQL Database
 ```
 
 ---
 
-# Project Structure
+## API Endpoints Reference
 
-```text
-pingx-backend/
-├── pom.xml
-├── .env
-└── src/
-    └── main/
-        └── java/
-            └── org/
-                └── example/
-                    ├── App.java
-                    ├── config/
-                    ├── controller/
-                    │     ├── UserResource
-                    │     ├── TweetResource
-                    │     ├── FeedResource
-                    │     └── CommentResource
-                    ├── dto/
-                    ├── exception/
-                    ├── model/
-                    ├── repository/
-                    └── service/
-```
+### Users & Profiles (`/api/users`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/users/` | Save initial user profile | Yes |
+| `PUT` | `/api/users/update` | Update profile (displayName, bio, image) | Yes |
+| `GET` | `/api/users/{username}` | Fetch user profile details by username | No |
+| `GET` | `/api/users/{userId}/tweets` | Fetch tweets posted by user | Yes |
+| `POST` | `/api/users/{userId}/follow` | Follow a user | Yes |
+| `DELETE` | `/api/users/{userId}/unfollow` | Unfollow a user | Yes |
+| `GET` | `/api/users/{userId}/is-following` | Check if logged in user follows target user | Yes |
+| `GET` | `/api/users/search?q={query}` | Search users by username or display name | Yes |
+| `GET` | `/api/users/suggesstions` | Get suggested users to follow | Yes |
+| `POST` | `/api/users/upload-image` | Upload profile/tweet image (Multipart) | Yes |
 
----
+### Feed (`/api/feed`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/feed/?limit=20&offset=0` | Fetch home activity feed (paginated) | Yes |
+| `GET` | `/api/feed/user/{userId}?limit=20&offset=0` | Fetch user activity feed (paginated) | Yes |
 
-# API Modules
+### Tweets (`/api/tweets`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/tweets/` | Create tweet or quote tweet | Yes |
+| `GET` | `/api/tweets/{tweetId}` | Get single tweet details | Yes |
+| `POST` | `/api/tweets/{tweetId}/like` | Like a tweet | Yes |
+| `DELETE` | `/api/tweets/{tweetId}/like` | Unlike a tweet | Yes |
+| `POST` | `/api/tweets/{tweetId}/retweet` | Retweet a tweet | Yes |
+| `DELETE` | `/api/tweets/{tweetId}/retweet` | Undo retweet | Yes |
+| `POST` | `/api/tweets/{tweetId}/reply` | Post a reply/comment to a tweet | Yes |
+| `GET` | `/api/tweets/{tweetId}/replies` | Get replies for a tweet | Yes |
 
-- Authentication
-- Users
-- Profiles
-- Feed
-- Tweets
-- Likes
-- Reposts
-- Comments
-- Follow System
-- Media Uploads
-
----
-
-# Feed Architecture
-
-PingX uses an activity-based feed rather than returning only tweets.
-
-```text
-FeedResponse
-│
-├── performedBy
-├── activityType
-├── activityAt
-└── TweetResponse
-        │
-        ├── author
-        ├── content
-        ├── quotedTweet
-        ├── likes
-        └── reposts
-```
-
-This allows the feed to display:
-
-- Original Tweets
-- Reposts
-- Quote Tweets
-
-without modifying the tweet model.
+### Notifications (`/api/notifications`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/notifications/` | Fetch recipient's notifications | Yes |
+| `POST` | `/api/notifications/read` | Mark all notifications as read | Yes |
+| `GET` | `/api/notifications/unread-count` | Get unread notification badge count | Yes |
 
 ---
 
-# Database Tables
+## Environment Variables (`.env`)
 
-Current schema includes:
-
-- users
-- followers
-- tweets
-- likes
-- retweets
-- comments
-- comment_likes
-
----
-
-# Getting Started
-
-## Prerequisites
-
-- Java 17+
-- Maven
-- PostgreSQL
-
----
-
-## Environment Variables
-
-Create a `.env` file.
+Create a `.env` file in the root directory:
 
 ```env
 PORT=8080
-
 DATABASE_URL=jdbc:postgresql://localhost:5432/pingx
-DATABASE_USER=your_postgres_user
-DATABASE_PASSWORD=your_postgres_password
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
 
-JWT_SECRET=your_secret
-
+JWT_SECRET=your_jwt_secret_key
 CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+MAX_QUOTE_DEPTH=3
 ```
 
 ---
 
-## Build
+## Getting Started
 
+### Build
 ```bash
 mvn clean package
 ```
 
----
-
-## Run
-
+### Run
 ```bash
 mvn exec:java -Dexec.mainClass="org.example.App"
 ```
 
-Server starts at
-
-```
-http://localhost:8080/api
-```
-
----
-
-# Current Features
-
-- JWT Authentication
-- User Profiles
-- Profile viewing
-- Follow / Unfollow
-- Tweet Creation
-- Tweet Deletion
-- Like / Unlike Tweets
-- Quote Tweets
-- Reposts
-- Recursive Quote Rendering
-- Activity Feed
-- Tweet Details
-- Comment System (v1)
-- Image Uploads
-- Pagination (LIMIT/OFFSET)
-
----
-
-# Planned Features
-
-- Reply Threads
-- Notifications
-- Infinite Scrolling (Cursor Pagination)
-- Bookmarks
-- Trending Feed
-- Direct Messaging
+The service will start at `http://localhost:8080/api`.

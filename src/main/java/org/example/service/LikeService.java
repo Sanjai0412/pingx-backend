@@ -6,6 +6,4 @@ public interface LikeService {
     void unlikeTweet(String userId, Long tweetId);
 
     boolean hasUserLikedTweet(String userId, Long tweetId);
-
-    long getLikeCount(Long tweetId);
 }
