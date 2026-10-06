@@ -289,6 +289,7 @@ public class TweetRepositoryImpl implements TweetRepository {
                         GROUP BY parent_tweet_id
                     ) rep ON t.id = rep.parent_tweet_id
                 """ + " WHERE t.id IN (" + placeHolders + ")";
+        // +"LIMIT ? OFFSET ?";
 
         List<TweetResponse> tweets = new ArrayList<TweetResponse>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -297,10 +298,12 @@ public class TweetRepositoryImpl implements TweetRepository {
             preparedStatement.setString(2, currentUserId);
 
             // bind the list of tweet ids
-            for (int i = 0; i < tweetIds.size(); i++) {
+            int i = 0;
+            for (i = 0; i < tweetIds.size(); i++) {
                 preparedStatement.setLong(3 + i, tweetIds.get(i));
             }
-
+            // preparedStatement.setInt(i++, limit);
+            // preparedStatement.setInt(i++, offset);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     tweets.add(tweetMapper.map(resultSet));

@@ -86,24 +86,6 @@ public class FollowServiceImpl implements FollowService {
         return followRepository.isFollowing(followerId, followingId);
     }
 
-    @Override
-    public long getFollowersCount(String userId) {
-        validateUserId(userId);
-        if (userRepository.getUserById(userId) == null) {
-            throw new NotFoundException("User not found");
-        }
-        return followRepository.getFollowersCount(userId);
-    }
-
-    @Override
-    public long getFollowingCount(String userId) {
-        validateUserId(userId);
-        if (userRepository.getUserById(userId) == null) {
-            throw new NotFoundException("User not found");
-        }
-        return followRepository.getFollowingCount(userId);
-    }
-
     private void validateUserId(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID is required");

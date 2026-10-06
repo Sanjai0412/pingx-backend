@@ -85,13 +85,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     @Override
     public void markAllAsRead(String recipientId) {
         String sql = "UPDATE notifications SET is_read = true WHERE recipient_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, recipientId);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        JdbcHelper.update(sql, recipientId);
     }
 
     @Override
@@ -118,39 +112,22 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         } else {
             sql.append(" AND reply_tweet_id IS NULL");
         }
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement preparedStatement = conn.prepareStatement(sql.toString())) {
-            preparedStatement.setString(1, recipientId);
-            preparedStatement.setString(2, actorId);
-            preparedStatement.setString(3, type.name());
-
-            int paramIndex = 4;
-            if (tweetId != null) {
-                preparedStatement.setLong(paramIndex++, tweetId);
-            }
-            if (replyTweetId != null) {
-                preparedStatement.setLong(paramIndex++, replyTweetId);
-            }
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
+        
+        if (tweetId != null && replyTweetId != null) {
+            JdbcHelper.update(sql.toString(), recipientId, actorId, type.name(), tweetId, replyTweetId);
+        } else if (tweetId != null) {
+            JdbcHelper.update(sql.toString(), recipientId, actorId, type.name(), tweetId);
+        } else if (replyTweetId != null) {
+            JdbcHelper.update(sql.toString(), recipientId, actorId, type.name(), replyTweetId);
+        } else {
+            JdbcHelper.update(sql.toString(), recipientId, actorId, type.name());
         }
     }
 
     @Override
     public int getUnreadNotificationCount(String recipientId) {
         String sql = "SELECT COUNT(*) AS count FROM notifications WHERE recipient_id = ? AND is_read = false";
-        try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, recipientId);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    return resultSet.getInt("count");
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-        return 0;
+        Integer count = JdbcHelper.queryOne(sql, rs -> rs.getInt(1), recipientId);
+        return count != null ? count : 0;
     }
 }

@@ -17,7 +17,7 @@ import javax.crypto.SecretKey;
 @Provider
 @Secured
 public class JwtAuthFilter implements ContainerRequestFilter {
-    public static final String ACCESS_TOKEN_SECRET = System.getenv("ACCESS_TOKEN_SECRET");
+    public static final String ACCESS_TOKEN_SECRET = AppConfig.ACCESS_TOKEN_SECRET;
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {

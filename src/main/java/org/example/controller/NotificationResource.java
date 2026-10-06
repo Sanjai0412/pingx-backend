@@ -31,17 +31,9 @@ public class NotificationResource {
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getNotificationsByRecipientId(@Context ContainerRequestContext context) {
-        try {
-            String recipientId = (String) context.getProperty("userId");
-            List<NotificationResponse> responses = notificationService.getNotificationsByRecipientId(recipientId);
-            return Response.status(Response.Status.OK)
-                    .entity(ApiResponse.success("Notifications fetched successfully", responses))
-                    .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(ApiResponse.error("Failed to fetch notifications", "INTERNAL_SERVER_ERROR"))
-                    .build();
-        }
+        String recipientId = (String) context.getProperty("userId");
+        List<NotificationResponse> responses = notificationService.getNotificationsByRecipientId(recipientId);
+        return Response.ok(ApiResponse.success("Notifications fetched successfully", responses)).build();
     }
 
     @Secured
@@ -49,18 +41,9 @@ public class NotificationResource {
     @Path("/read")
     @Produces(MediaType.APPLICATION_JSON)
     public Response readAllNotifications(@Context ContainerRequestContext context) {
-        try {
-            String currentUserId = (String) context.getProperty("userId");
-            notificationService.markAllAsRead(currentUserId);
-
-            return Response.status(Response.Status.OK)
-                    .entity(ApiResponse.success("Notifications read successfully", null))
-                    .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(ApiResponse.error("Failed to read notifications", "INTERNAL_SERVER_ERROR"))
-                    .build();
-        }
+        String currentUserId = (String) context.getProperty("userId");
+        notificationService.markAllAsRead(currentUserId);
+        return Response.ok(ApiResponse.success("Notifications read successfully", null)).build();
     }
 
     @Secured
@@ -68,16 +51,9 @@ public class NotificationResource {
     @Path("/unread-count")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getUnreadNotificationCount(@Context ContainerRequestContext context) {
-        try {
-            String recipientId = (String) context.getProperty("userId");
-            int count = notificationService.getUnreadNotificationCount(recipientId);
-            return Response.status(Response.Status.OK)
-                    .entity(ApiResponse.success("Unread notification count fetched successfully", count))
-                    .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(ApiResponse.error("Failed to fetch unread notification count", "INTERNAL_SERVER_ERROR"))
-                    .build();
-        }
+        String recipientId = (String) context.getProperty("userId");
+        int count = notificationService.getUnreadNotificationCount(recipientId);
+        return Response.ok(ApiResponse.success("Unread notification count fetched successfully", count)).build();
     }
 }
+

@@ -9,8 +9,28 @@ import org.example.model.ApiResponse;
 @Provider
 public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
 
+    // Global exception mapper with all domain exceptions in one place
     @Override
     public Response toResponse(Throwable exception) {
+
+        if (exception instanceof IllegalArgumentException) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(ApiResponse.error(exception.getMessage(), "BAD_REQUEST"))
+                    .build();
+        }
+        if (exception instanceof NotFoundException) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(ApiResponse.error(exception.getMessage(), "NOT_FOUND"))
+                    .build();
+        }
+        if (exception instanceof ConflictException) {
+            return Response.status(Response.Status.CONFLICT)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(ApiResponse.error(exception.getMessage(), "CONFLICT"))
+                    .build();
+        }
         // Log the exception to the server console
         exception.printStackTrace();
 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.example.config.AppConfig;
 import org.example.dto.FeedResponse;
 import org.example.dto.FeedType;
 import org.example.dto.TweetResponse;
@@ -17,7 +18,6 @@ public class FeedServiceImpl implements FeedService {
     private final TweetService tweetService;
     private final FeedRepository feedRepository;
     private final UserService userService;
-    private static final int MAX_QUOTE_DEPTH = Integer.parseInt(System.getenv("MAX_QUOTE_DEPTH"));
 
     @Inject
     public FeedServiceImpl(TweetService tweetService, FeedRepository feedRepository, UserService userService) {
@@ -39,7 +39,7 @@ public class FeedServiceImpl implements FeedService {
                 tweetIds.add(tweetId);
             }
         }
-        List<TweetResponse> tweets = tweetService.buildTweetResponses(tweetIds, currentUserId, MAX_QUOTE_DEPTH);
+        List<TweetResponse> tweets = tweetService.buildTweetResponses(tweetIds, currentUserId, AppConfig.MAX_QUOTE_DEPTH);
 
         Map<Long, TweetResponse> tweetMap = new HashMap<>();
 
@@ -83,7 +83,7 @@ public class FeedServiceImpl implements FeedService {
                 tweetIds.add(tweetId);
             }
         }
-        List<TweetResponse> tweets = tweetService.buildTweetResponses(tweetIds, currentUserId, MAX_QUOTE_DEPTH);
+        List<TweetResponse> tweets = tweetService.buildTweetResponses(tweetIds, currentUserId, AppConfig.MAX_QUOTE_DEPTH);
 
         Map<Long, TweetResponse> tweetMap = new HashMap<>();
         for (TweetResponse tweet : tweets) {

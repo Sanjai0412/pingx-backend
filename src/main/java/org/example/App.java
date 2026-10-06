@@ -8,11 +8,13 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.net.URI;
 
+import org.example.config.AppConfig;
+
 public class App {
 
-    private static final String HOST = System.getenv().getOrDefault("HOST", "0.0.0.0");
+    private static final String HOST = AppConfig.HOST;
 
-    private static final String PORT = System.getenv().getOrDefault("PORT", "8080");
+    private static final int PORT = AppConfig.PORT;
 
     private static final String BASE_PATH = "/api/";
 

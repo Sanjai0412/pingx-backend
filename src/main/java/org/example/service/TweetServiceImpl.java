@@ -1,10 +1,12 @@
 package org.example.service;
 
-import jakarta.inject.Inject;
+import org.example.config.AppConfig;
 import org.example.dto.TweetResponse;
 import org.example.model.Tweet;
 import org.example.model.NotificationType;
 import org.example.repository.TweetRepository;
+
+import jakarta.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +18,7 @@ import java.util.Set;
 public class TweetServiceImpl implements TweetService {
     private final TweetRepository tweetRepository;
     private final NotificationService notificationService;
-    private static final int MAX_QUOTE_DEPTH = Integer.parseInt(System.getenv("MAX_QUOTE_DEPTH"));
+    private static final int MAX_QUOTE_DEPTH = AppConfig.MAX_QUOTE_DEPTH;
 
     // HK2 reads this annotation and passes in the TweetRepositoryImpl obj
     @Inject

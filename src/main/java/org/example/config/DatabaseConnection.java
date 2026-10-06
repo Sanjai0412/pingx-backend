@@ -12,8 +12,8 @@ public class DatabaseConnection {
   static {
     HikariConfig hikariConfig = new HikariConfig();
 
-    hikariConfig.setJdbcUrl(System.getenv("DB_URL"));
-    dataSource = new HikariDataSource(hikariConfig);
+    hikariConfig.setJdbcUrl(AppConfig.DB_URL);
+    dataSource = new HikariDataSource(hikariConfig); // Pool created at app boot
   }
 
   public static Connection getConnection() throws SQLException {
